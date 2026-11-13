@@ -169,6 +169,23 @@ table.sg th{background:#fff0f5}
  .hero{padding:60px 16px}
  .pdgrid{grid-template-columns:1fr}
 }
+
+/* ===== تجربة الطقم بالكاميرا ===== */
+.tryov{position:fixed;inset:0;background:rgba(40,16,28,.92);z-index:300;display:none;align-items:center;justify-content:center;padding:10px}
+.tryov.show{display:flex}
+.trybox{background:#fff;border-radius:16px;width:100%;max-width:460px;max-height:96vh;overflow:auto;padding:14px}
+.tryhd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:800}
+.tryst{position:relative;aspect-ratio:3/4;background:#2a1520;border-radius:12px;overflow:hidden}
+.tryst canvas{width:100%;height:100%;display:block}
+.trymsg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;padding:20px;font-weight:600;background:rgba(42,21,32,.55)}
+.trymsg.hide{display:none}
+.trytools{margin-top:10px;display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;font-size:13px}
+.trytools input[type=range]{padding:0;accent-color:var(--rose);border:0}
+.trynote{font-size:12px;color:var(--muted);margin-top:8px}
+.trythumbs{display:flex;gap:6px;margin-top:8px;overflow:auto}
+.trythumbs img{width:48px;height:60px;object-fit:cover;border-radius:6px;border:2px solid transparent;cursor:pointer;flex-shrink:0}
+.trythumbs img.on{border-color:var(--rose)}
+@media (prefers-reduced-motion:reduce){.tryov *{transition:none!important}}
 </style>
 </head>
 <body>
@@ -469,6 +486,28 @@ table.sg th{background:#fff0f5}
   <div class="row" style="justify-content:center"><button class="btn red" onclick="cfYes()">نعم</button><button class="btn dark" onclick="cfNo()">إلغاء</button></div>
  </div>
 </div>
+
+<!-- Virtual try-on -->
+<div class="tryov" id="tryOv">
+ <div class="trybox">
+  <div class="tryhd"><span>🪞 جربي الطقم عليكي</span><button class="btn sm dark" onclick="closeTry()">إغلاق ✕</button></div>
+  <div class="tryst">
+   <canvas id="tryCv" width="480" height="640"></canvas>
+   <div class="trymsg" id="tryMsg">جاري التجهيز...</div>
+  </div>
+  <div class="trythumbs" id="tryThumbs"></div>
+  <div class="trytools">
+   <label style="margin:0">النوع</label>
+   <select id="tryMode" onchange="tryCfg.mode=this.value"><option value="top">قطعة علوية (بلوزة / جاكت)</option><option value="full">طقم كامل (من الكتف للرجل)</option></select>
+   <label style="margin:0">الحجم</label><input type="range" id="trySc" min="60" max="160" value="100" oninput="tryCfg.sc=this.value/100">
+   <label style="margin:0">أعلى / أسفل</label><input type="range" id="tryDy" min="-30" max="30" value="0" oninput="tryCfg.dy=this.value/100">
+   <label style="margin:0">إزالة الخلفية</label><input type="range" id="tryTol" min="10" max="120" value="48" onchange="tryCfg.tol=+this.value;tryPrepare()">
+  </div>
+  <div class="row" style="margin-top:10px"><button class="btn sm" onclick="trySnap()">📸 صوّري</button><button class="btn sm line" onclick="tryFlip()">🔄 قلب الكاميرا</button></div>
+  <p class="trynote">الصورة بتتعالج على جهازك بس، مفيش أي فيديو بيترفع على الإنترنت. المعاينة تقريبية وبتبان أحسن لو وقفتي قدام الكاميرا بإضاءة كويسة وجسمك كله ظاهر.</p>
+ </div>
+</div>
+
 <div class="ov" id="imgOv" style="z-index:370" onclick="this.classList.remove('show')"><img id="bigImg" style="max-width:100%;max-height:90vh;border-radius:10px"></div>
 <div class="toast" id="toast"></div>
 
@@ -670,9 +709,153 @@ function renderPdTop(){
  ${p.stock!=null&&p.stock>0&&p.stock<=lowLimit()?`<p style="color:var(--red);font-size:14px">⚠️ متبقي ${p.stock} قطع فقط</p>`:''}
  <div class="err" id="pdErr"></div>
  <div class="row" style="margin-top:6px">${out?`<button class="btn line" onclick="notifyMe(${p.id})">🔔 نبهيني لما يتوفر</button>`:'<button class="btn" onclick="pdAdd()">🛒 أضيفي للسلة</button>'}<a class="btn green" target="_blank" rel="noopener" href="https://wa.me/${waNum()}?text=${encodeURIComponent('استفسار عن: '+p.name+' ('+p.price+' ج.م)')}">💬 اسألي على واتساب</a></div>
+ <div class="row" style="margin-top:8px"><button class="btn sm dark" onclick="openTry()">🪞 جربيه عليكي بالكاميرا</button></div>
  <div class="row" style="margin-top:8px"><button class="btn sm line" onclick="shareProd()">📤 شاركي مع صحابك</button><button class="btn sm line" onclick="copyProd()">🔗 نسخ الرابط</button><button class="btn sm line" onclick="togCmp(${p.id})">${cmp.includes(p.id)?'✓ في المقارنة':'⚖️ أضيفي للمقارنة'}</button>${cmp.length>=2?`<button class="btn sm" onclick="openCmp()">عرض المقارنة (${cmp.length})</button>`:''}</div>
  </div></div>`;
 }
+
+/* ============ تجربة الطقم بالكاميرا (MediaPipe) ============ */
+const MP_VER='0.10.14';
+const MP_BASE='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@'+MP_VER;
+const MP_MODEL='https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+let tryCfg={mode:'top',sc:1,dy:0,tol:48,img:0,facing:'user'},tryPose=null,tryStream=null,tryRaf=0,tryGar=null,trySm=null,tryLastTs=-1,tryPid=null;
+function tryMsg(t){const m=$('tryMsg');m.textContent=t||'';m.classList.toggle('hide',!t)}
+async function tryLoadPose(){
+ if(tryPose)return tryPose;
+ const V=await import(MP_BASE+'/vision_bundle.mjs');
+ const fs=await V.FilesetResolver.forVisionTasks(MP_BASE+'/wasm');
+ const mk=d=>V.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:MP_MODEL,delegate:d},runningMode:'VIDEO',numPoses:1});
+ try{tryPose=await mk('GPU')}catch(e){tryPose=await mk('CPU')}
+ return tryPose;
+}
+async function openTry(){
+ if(!pd)return;
+ const p=prodOf(pd.id);if(!p)return;
+ if(!p.imgs.length){toast('المنتج ده ملوش صورة للتجربة');return}
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('المتصفح ده مش بيدعم الكاميرا');return}
+ tryPid=p.id;tryCfg.img=pd.img||0;tryGar=null;trySm=null;
+ $('tryThumbs').innerHTML=p.imgs.length>1?p.imgs.map((x,i)=>`<img src="${x}" class="${i===tryCfg.img?'on':''}" onclick="tryCfg.img=${i};tryMarkThumb();tryPrepare()">`).join(''):'';
+ $('tryOv').classList.add('show');tryMsg('اسمحي للموقع باستخدام الكاميرا...');
+ try{
+  await tryStartCam();
+  tryMsg('جاري تحميل نموذج التتبع (أول مرة بياخد ثواني)...');
+  await Promise.all([tryLoadPose(),tryPrepare()]);
+  tryMsg('');tryLoop();
+ }catch(e){
+  console.error(e);
+  tryMsg(e&&e.name==='NotAllowedError'?'لازم تسمحي بالكاميرا من إعدادات المتصفح وتجربي تاني':'تعذر تشغيل التجربة. تأكدي من الإنترنت والكاميرا وجربي تاني');
+ }
+}
+function tryMarkThumb(){[...$('tryThumbs').children].forEach((im,i)=>im.classList.toggle('on',i===tryCfg.img))}
+async function tryStartCam(){
+ tryStopCam();
+ tryStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:tryCfg.facing,width:{ideal:720},height:{ideal:960}},audio:false});
+ let v=$('tryVid');
+ if(!v){v=document.createElement('video');v.id='tryVid';v.playsInline=true;v.muted=true;v.setAttribute('playsinline','');v.style.display='none';document.body.appendChild(v)}
+ v.srcObject=tryStream;await v.play();
+}
+function tryStopCam(){if(tryStream){tryStream.getTracks().forEach(t=>t.stop());tryStream=null}}
+async function tryFlip(){tryCfg.facing=tryCfg.facing==='user'?'environment':'user';try{await tryStartCam()}catch(e){toast('تعذر قلب الكاميرا')}}
+function closeTry(){cancelAnimationFrame(tryRaf);tryRaf=0;tryStopCam();$('tryOv').classList.remove('show')}
+/* تحضير صورة الطقم: إزالة الخلفية المصمتة مجاناً على الجهاز */
+function tryPrepare(){
+ const p=prodOf(tryPid);if(!p)return Promise.resolve();
+ const src=p.imgs[tryCfg.img];
+ return new Promise(res=>{
+  const im=new Image();im.crossOrigin='anonymous';
+  const done=(img,tainted)=>{tryGar=tryCutout(img,tainted);res()};
+  im.onload=()=>done(im,false);
+  im.onerror=()=>{const i2=new Image();i2.onload=()=>done(i2,true);i2.onerror=()=>res();i2.src=src};
+  im.src=src;
+ });
+}
+function tryCutout(img,tainted){
+ const M=640,k=Math.min(1,M/Math.max(img.naturalWidth,img.naturalHeight));
+ const w=Math.max(1,Math.round(img.naturalWidth*k)),h=Math.max(1,Math.round(img.naturalHeight*k));
+ const c=document.createElement('canvas');c.width=w;c.height=h;
+ const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(img,0,0,w,h);
+ let d;try{d=x.getImageData(0,0,w,h)}catch(e){return{cv:c,w,h,raw:true}}
+ const a=d.data,idx=(X,Y)=>(Y*w+X)*4;
+ // لو الصورة أصلاً شفافة في الأركان نسيبها زي ما هي
+ if(a[3]<20&&a[idx(w-1,0)+3]<20&&a[idx(0,h-1)+3]<20)return tryTrim(c,d,w,h);
+ // لون الخلفية = متوسط الأركان
+ const pts=[[0,0],[w-1,0],[0,h-1],[w-1,h-1],[w>>1,0],[w>>1,h-1]];
+ let r=0,g=0,b=0;pts.forEach(([X,Y])=>{const i=idx(X,Y);r+=a[i];g+=a[i+1];b+=a[i+2]});
+ r/=pts.length;g/=pts.length;b/=pts.length;
+ const tol=tryCfg.tol,T=tol*tol*3;
+ const near=i=>{const dr=a[i]-r,dg=a[i+1]-g,db=a[i+2]-b;return dr*dr+dg*dg+db*db<=T};
+ const seen=new Uint8Array(w*h),st=[];
+ const push=(X,Y)=>{if(X<0||Y<0||X>=w||Y>=h)return;const q=Y*w+X;if(seen[q])return;if(!near(q*4))return;seen[q]=1;st.push(q)};
+ for(let X=0;X<w;X++){push(X,0);push(X,h-1)}for(let Y=0;Y<h;Y++){push(0,Y);push(w-1,Y)}
+ while(st.length){const q=st.pop(),X=q%w,Y=(q/w)|0;push(X+1,Y);push(X-1,Y);push(X,Y+1);push(X,Y-1)}
+ for(let q=0;q<w*h;q++)if(seen[q])a[q*4+3]=0;
+ // تنعيم حواف بسيط
+ for(let Y=1;Y<h-1;Y++)for(let X=1;X<w-1;X++){const q=Y*w+X;if(!seen[q]&&(seen[q-1]||seen[q+1]||seen[q-w]||seen[q+w]))a[q*4+3]=170}
+ return tryTrim(c,d,w,h);
+}
+function tryTrim(c,d,w,h){
+ const a=d.data;let x0=w,y0=h,x1=0,y1=0;
+ for(let Y=0;Y<h;Y++)for(let X=0;X<w;X++)if(a[(Y*w+X)*4+3]>40){if(X<x0)x0=X;if(X>x1)x1=X;if(Y<y0)y0=Y;if(Y>y1)y1=Y}
+ if(x1<=x0||y1<=y0)return{cv:c,w,h};
+ c.getContext('2d').putImageData(d,0,0);
+ const tw=x1-x0+1,th=y1-y0+1,o=document.createElement('canvas');o.width=tw;o.height=th;
+ o.getContext('2d').drawImage(c,x0,y0,tw,th,0,0,tw,th);
+ return{cv:o,w:tw,h:th};
+}
+function tryLoop(){
+ const v=$('tryVid'),cv=$('tryCv');if(!v||!cv)return;
+ const ctx=cv.getContext('2d');
+ const step=()=>{
+  if(!$('tryOv').classList.contains('show'))return;
+  if(v.readyState>=2&&v.videoWidth){
+   const W=v.videoWidth,H=v.videoHeight;if(cv.width!==W){cv.width=W;cv.height=H}
+   const mir=tryCfg.facing==='user';
+   ctx.save();if(mir){ctx.translate(W,0);ctx.scale(-1,1)}ctx.drawImage(v,0,0,W,H);ctx.restore();
+   let L=null;
+   if(tryPose){const ts=performance.now();if(ts>tryLastTs){tryLastTs=ts;try{const r=tryPose.detectForVideo(v,ts);L=r.landmarks&&r.landmarks[0]}catch(e){}}}
+   if(L&&tryGar)tryDraw(ctx,L,W,H,mir);
+   else if(tryPose&&!L){ctx.fillStyle='rgba(0,0,0,.45)';ctx.fillRect(0,H-46,W,46);ctx.fillStyle='#fff';ctx.font='600 20px Cairo,sans-serif';ctx.textAlign='center';ctx.fillText('قفي قدام الكاميرا وخلي جسمك ظاهر',W/2,H-16)}
+  }
+  tryRaf=requestAnimationFrame(step);
+ };
+ cancelAnimationFrame(tryRaf);step();
+}
+function tryDraw(ctx,L,W,H,mir){
+ const P=i=>({x:(mir?1-L[i].x:L[i].x)*W,y:L[i].y*H,v:L[i].visibility==null?1:L[i].visibility});
+ const ls=P(11),rs=P(12),lh=P(23),rh=P(24),la=P(27),ra=P(28);
+ if(ls.v<.4||rs.v<.4)return;
+ const sx=(ls.x+rs.x)/2,sy=(ls.y+rs.y)/2,sw=Math.hypot(ls.x-rs.x,ls.y-rs.y);
+ const A=ls.x<rs.x?ls:rs,B=ls.x<rs.x?rs:ls,ang=Math.max(-.5,Math.min(.5,Math.atan2(B.y-A.y,B.x-A.x)));
+ const hipOK=lh.v>.4&&rh.v>.4,hy=hipOK?(lh.y+rh.y)/2:sy+sw*1.6;
+ const torso=Math.max(40,hy-sy);
+ const G=tryGar,asp=G.w/G.h;
+ let gw,gh,cx=sx,top;
+ if(tryCfg.mode==='full'){
+  const ay=(la.v>.4&&ra.v>.4)?(la.y+ra.y)/2:(la.v>.4?la.y:ra.v>.4?ra.y:sy+torso*3.1);
+  gh=(ay-sy)*1.18*tryCfg.sc;gw=gh*asp;
+  const minW=sw*1.45;if(gw<minW){gw=minW;gh=gw/asp}
+  top=sy-gh*0.07;
+ }else{
+  gw=sw*1.75*tryCfg.sc;gh=gw/asp;
+  top=sy-gh*0.1;
+ }
+ top+=tryCfg.dy*H*0.3;
+ // تنعيم الحركة
+ const cur={cx,top,gw,gh,ang};
+ const f=.35;trySm=trySm?{cx:trySm.cx+(cur.cx-trySm.cx)*f,top:trySm.top+(cur.top-trySm.top)*f,gw:trySm.gw+(cur.gw-trySm.gw)*f,gh:trySm.gh+(cur.gh-trySm.gh)*f,ang:trySm.ang+(cur.ang-trySm.ang)*f}:cur;
+ const S=trySm;
+ const tilt=S.ang;
+ ctx.save();ctx.translate(S.cx,S.top+S.gh*0.1);ctx.rotate(tilt);ctx.globalAlpha=.97;
+ ctx.drawImage(G.cv,-S.gw/2,-S.gh*0.1,S.gw,S.gh);ctx.restore();
+}
+function trySnap(){
+ const cv=$('tryCv');
+ cv.toBlob(b=>{if(!b)return;const f=new File([b],'jasmine-try-on.png',{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:'Jasmine Style'}).catch(()=>{})}
+  else{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='jasmine-try-on.png';document.body.appendChild(a);a.click();a.remove();toast('تم حفظ الصورة ✓')}
+ },'image/png');
+}
+
 const prodUrl=id=>location.href.split('#')[0]+'#p'+id;
 function shareProd(){const p=prodOf(pd.id);window.open('https://wa.me/?text='+encodeURIComponent(p.name+' — '+money(p.price)+' ج.م\n'+prodUrl(p.id)),'_blank')}
 function copyProd(){
