@@ -169,6 +169,29 @@ table.sg th{background:#fff0f5}
  .hero{padding:60px 16px}
  .pdgrid{grid-template-columns:1fr}
 }
+
+/* ===== شكل صفحة المنتج الجديد ===== */
+.pbox{background:#fbf3f6;border:1.5px solid var(--line);border-radius:18px;padding:14px 18px;margin:12px 0}
+.pbox .hint{display:inline-block;background:#fbe9cc;color:#b7791f;font-weight:700;border-radius:20px;padding:7px 16px;font-size:14px;margin-top:8px}
+.vh{display:flex;align-items:center;gap:10px;margin:20px 0 10px;font-weight:800;font-size:17px}
+.vh em{font-style:normal;background:#f3e6ec;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:600;color:var(--ink)}
+.vh a{margin-inline-start:auto;color:var(--rose);font-size:13px;font-weight:600;cursor:pointer}
+.sw{display:inline-block;width:44px;height:44px;border-radius:50%;border:2px solid rgba(0,0,0,.15);margin:0 0 10px 12px;cursor:pointer;padding:0;vertical-align:middle}
+.sw.on{outline:3px solid var(--dark);outline-offset:3px}
+.szc{width:52px;height:52px;border-radius:50%;border:2px solid var(--line);background:#fff;font-weight:800;font-size:15px;margin:0 0 10px 12px;position:relative;overflow:hidden;color:var(--ink)}
+.szc.on{background:var(--dark);color:#fff;border-color:var(--dark)}
+.szc.so{opacity:.5;cursor:not-allowed}
+.szc.so::after{content:'';position:absolute;left:6%;right:6%;top:50%;height:2px;background:#e0485b;transform:rotate(-28deg)}
+.qty{display:flex;align-items:center;justify-content:space-between;border:1.5px solid var(--line);border-radius:18px;padding:6px 14px;margin:18px 0 12px;background:#fff}
+.qty button{width:44px;height:44px;font-size:24px;line-height:1;color:var(--dark);background:#fbf3f6;border-radius:50%}
+.qty b{font-size:22px}
+.pdbtns{display:flex;gap:10px;align-items:stretch}
+.pdbtns .btn{flex:1;border-radius:22px;padding:15px;font-size:17px}
+.pdbtns .btn.dark.dis{background:#7a6a72}
+.favsq{width:58px;border:1.5px solid var(--line);border-radius:20px;background:#fff;font-size:24px}
+.buynow{display:block;width:100%;margin-top:12px;border-radius:22px;padding:16px;font-size:18px}
+.buynow.dis{opacity:.65}
+.wabtn{display:block;width:100%;margin-top:12px;border-radius:22px;padding:15px;font-size:17px;background:#e8f8ee;color:#1a9a50;border:1.5px solid #bfe8cf;font-weight:700;text-align:center}
 </style>
 </head>
 <body>
@@ -655,29 +678,50 @@ function renderFav(){
 let pd=null,rvStars=5;
 function openPd(id){
  const p=prodOf(id);if(!p)return;
- pd={id,color:'',size:'',img:0};
+ pd={id,color:'',size:'',img:0,q:1};
  {const r=load('recent',[]).filter(x=>x!==id);r.unshift(id);save('recent',r.slice(0,8));renderSections()}
  $('favOv').classList.remove('show');
  renderPdTop();renderPdRev();renderPdSim();
  $('pdOv').classList.add('show');$('pdOv').scrollTop=0;
 }
 function closePd(){$('pdOv').classList.remove('show');pd=null}
+const CLR={'اسود':'#111111','ابيض':'#ffffff','اوف وايت':'#f5f1e8','كريمي':'#f3e9d2','عاجي':'#f5f0e1','بيج':'#d8c3a5','نود':'#e3bfa8','جملي':'#c19a6b','كاكي':'#a39a6b','كافيه':'#7a5a42','قهوه':'#6f4e37','بني':'#6b4423','رمادي':'#9aa0a6','فضي':'#c0c0c0','ذهبي':'#d4af37','شامبانيا':'#e8d3a9','كحلي':'#1b2a49','سماوي':'#7ec8f2','تركواز':'#20b2aa','فيروزي':'#1fb5a8','ازرق':'#2f6fdb','اخضر زيتي':'#6b705c','زيتي':'#6b705c','اخضر':'#2e9e5b','اصفر':'#f4d03f','خردلي':'#d4a017','برتقالي':'#f28c28','طوبي':'#b5523b','مرجاني':'#ff7f6e','سلموني':'#fa8072','احمر':'#d62839','نبيتي':'#7b1e3a','عنابي':'#7b1e3a','بوردو':'#6d0f25','خمري':'#6d213c','فوشيا':'#e0218a','وردي':'#f4a6c0','روز':'#e8a0bf','بينك':'#f4a6c0','ليلكي':'#c8a2c8','لافندر':'#b497d6','موف':'#9b6bd1','بنفسجي':'#8e44ad','black':'#111111','white':'#ffffff','beige':'#d8c3a5','brown':'#6b4423','grey':'#9aa0a6','gray':'#9aa0a6','navy':'#1b2a49','blue':'#2f6fdb','green':'#2e9e5b','olive':'#6b705c','yellow':'#f4d03f','orange':'#f28c28','red':'#d62839','pink':'#f4a6c0','purple':'#8e44ad','lavender':'#b497d6','burgundy':'#6d0f25','cream':'#f3e9d2','gold':'#d4af37','silver':'#c0c0c0','nude':'#e3bfa8'};
+const nrmC=t=>String(t||'').toLowerCase().replace(/[\u064B-\u0652\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/\s+/g,' ').trim();
+function clrHex(n){const k=nrmC(n);if(CLR[k])return CLR[k];for(const key in CLR){if(k.includes(key))return CLR[key]}return null}
+function pdPick(k,v){
+ const p=prodOf(pd.id);pd[k]=v;
+ if(k==='size'){const mx=stockFor(p,v);if(mx!=null&&pd.q>mx)pd.q=Math.max(1,mx)}
+ renderPdTop();
+}
+function pdQ(d){
+ const p=prodOf(pd.id),mx=stockFor(p,pd.size);let n=(pd.q||1)+d;
+ if(n<1)n=1;
+ if(mx!=null&&n>mx){toast('المتاح '+mx+' قطعة فقط');n=Math.max(1,mx)}
+ pd.q=n;$('pdQn').textContent=n;
+}
 function renderPdTop(){
  const p=prodOf(pd.id),rt=rating(p.id),out=outOf(p);
  const im=p.imgs[pd.img]||'';
+ const needC=p.colors.length&&!pd.color,needS=p.sizes.length&&!pd.size,ready=!needC&&!needS;
+ const hint=needC&&needS?'اختاري اللون والمقاس أولاً':needC?'اختاري اللون أولاً':needS?'اختاري المقاس أولاً':'';
+ const waTxt='استفسار/طلب: '+p.name+' ('+p.price+' ج.م)'+(pd.color?' - اللون: '+pd.color:'')+(pd.size?' - المقاس: '+pd.size:'')+(pd.q>1?' - الكمية: '+pd.q:'');
+ const colors=p.colors.length?`<div class="vh">اختاري اللون <em>${pd.color?esc(pd.color):'--'}</em></div><div>${p.colors.map(c=>{const h=clrHex(c);return h?`<button class="sw ${pd.color===c?'on':''}" style="background:${h}" title="${esc(c)}" aria-label="${esc(c)}" data-v="${esc(c)}" onclick="pdPick('color',this.dataset.v)"></button>`:`<button class="opt ${pd.color===c?'on':''}" data-v="${esc(c)}" onclick="pdPick('color',this.dataset.v)">${esc(c)}</button>`}).join('')}</div>`:'';
+ const sizes=p.sizes.length?`<div class="vh">اختاري المقاس <em>${pd.size?esc(pd.size):'--'}</em><a onclick="openSG()">📏 دليل المقاسات</a></div><div>${p.sizes.map(z=>{const so=p.sizeStock&&p.sizeStock[z]<=0;return `<button class="szc ${pd.size===z?'on':''} ${so?'so':''}" ${so?'disabled title="نفد"':''} data-v="${esc(z)}" onclick="pdPick('size',this.dataset.v)">${esc(z)}</button>`}).join('')}</div>`:'';
  $('pdTop').innerHTML=`<div class="pdgrid"><div><div class="gal">${im?`<img src="${im}" alt="">`:icon(p.cat)}</div>${p.imgs.length>1?`<div class="thumbs">${p.imgs.map((x,i)=>`<img src="${x}" class="${i===pd.img?'on':''}" onclick="pd.img=${i};renderPdTop()">`).join('')}</div>`:''}</div>
- <div class="pdinfo"><div class="row" style="justify-content:space-between"><span style="color:var(--muted);font-size:13px">${esc(catName(p.cat))}</span><button class="heart" style="position:static" onclick="togFav(${p.id})">${favs.includes(p.id)?'❤️':'🤍'}</button></div>
+ <div class="pdinfo"><div style="color:var(--muted);font-size:13px">${esc(catName(p.cat))}</div>
  <h2>${esc(p.name)}</h2>
  ${rt.n?`<div class="stars">${starsTxt(rt.avg)} <small style="color:var(--muted)">${rt.avg.toFixed(1)} (${rt.n} تقييم)</small></div>`:''}
- ${priceHtml(p)}${p.old>p.price?`<div><span class="pill ok">وفّرتي ${money(p.old-p.price)} ج.م</span></div>`:''}
- ${p.desc?`<p style="margin:10px 0;white-space:pre-line">${esc(p.desc)}</p>`:''}
- ${p.material?`<p><b>الخامة:</b> ${esc(p.material)}</p>`:''}
- ${p.colors.length?`<label>اللون</label><div>${p.colors.map(c=>`<button class="opt ${pd.color===c?'on':''}" onclick="pd.color='${esc(c).replace(/'/g,'')}';renderPdTop()">${esc(c)}</button>`).join('')}</div>`:''}
- ${p.sizes.length?`<label>المقاس <a onclick="openSG()" style="color:var(--rose);cursor:pointer;font-weight:400">📏 دليل المقاسات</a></label><div>${p.sizes.map(s=>{const so=p.sizeStock&&p.sizeStock[s]<=0;return `<button class="opt ${pd.size===s?'on':''}" ${so?'disabled style="opacity:.4;text-decoration:line-through" title="نفد"':''} onclick="pd.size='${esc(s).replace(/'/g,'')}';renderPdTop()">${esc(s)}</button>`}).join('')}</div>`:''}
+ <div class="pbox">${priceHtml(p)}${p.old>p.price?`<div><span class="pill ok">وفّرتي ${money(p.old-p.price)} ج.م</span></div>`:''}${!out&&hint?`<div class="hint">${hint}</div>`:''}</div>
+ ${p.material?`<p style="margin:6px 0"><b>الخامة:</b> ${esc(p.material)}</p>`:''}
+ ${colors}${sizes}
  ${(()=>{const n=stockFor(p,pd.size);return n!=null&&n>0&&n<=lowLimit()?`<p style="color:var(--red);font-size:14px">⚠️ متبقي ${n} قطع فقط${p.sizeStock&&pd.size?' من مقاس '+esc(pd.size):''}</p>`:''})()}
  <div class="err" id="pdErr"></div>
- <div class="row" style="margin-top:6px">${out?`<button class="btn line" onclick="notifyMe(${p.id})">🔔 نبهيني لما يتوفر</button>`:'<button class="btn" onclick="pdAdd()">🛒 أضيفي للسلة</button>'}<a class="btn green" target="_blank" rel="noopener" href="https://wa.me/${waNum()}?text=${encodeURIComponent('استفسار عن: '+p.name+' ('+p.price+' ج.م)')}">💬 اسألي على واتساب</a></div>
- <div class="row" style="margin-top:8px"><button class="btn sm line" onclick="shareProd()">📤 شاركي مع صحابك</button><button class="btn sm line" onclick="copyProd()">🔗 نسخ الرابط</button><button class="btn sm line" onclick="togCmp(${p.id})">${cmp.includes(p.id)?'✓ في المقارنة':'⚖️ أضيفي للمقارنة'}</button>${cmp.length>=2?`<button class="btn sm" onclick="openCmp()">عرض المقارنة (${cmp.length})</button>`:''}</div>
+ ${out?`<button class="btn line" style="width:100%;margin-top:14px" onclick="notifyMe(${p.id})">🔔 نبهيني لما يتوفر</button>`:`
+ <div class="qty"><button onclick="pdQ(-1)" aria-label="أقل">−</button><b id="pdQn">${pd.q||1}</b><button onclick="pdQ(1)" aria-label="أكثر">+</button></div>
+ <div class="pdbtns"><button class="btn dark ${ready?'':'dis'}" onclick="pdAdd()">🛍️ أضيفي للسلة</button><button class="favsq" onclick="togFav(${p.id})" aria-label="المفضلة">${favs.includes(p.id)?'❤️':'🤍'}</button></div>
+ <button class="btn buynow ${ready?'':'dis'}" onclick="pdAdd(true)">⚡ اشتري الآن</button>`}
+ <a class="wabtn" target="_blank" rel="noopener" href="https://wa.me/${waNum()}?text=${encodeURIComponent(waTxt)}">💬 اطلبي عبر واتساب</a>
+ <div class="row" style="margin-top:12px"><button class="btn sm line" onclick="shareProd()">📤 شاركي مع صحابك</button><button class="btn sm line" onclick="copyProd()">🔗 نسخ الرابط</button><button class="btn sm line" onclick="togCmp(${p.id})">${cmp.includes(p.id)?'✓ في المقارنة':'⚖️ أضيفي للمقارنة'}</button>${cmp.length>=2?`<button class="btn sm" onclick="openCmp()">عرض المقارنة (${cmp.length})</button>`:''}</div>
  </div></div>`;
 }
 const prodUrl=id=>location.href.split('#')[0]+'#p'+id;
@@ -687,12 +731,14 @@ function copyProd(){
  const fb=()=>{try{prompt('انسخي الرابط:',u)}catch(e){}};
  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(()=>toast('تم نسخ الرابط ✓')).catch(fb);else fb();
 }
-function pdAdd(){
+function pdAdd(buy){
  const p=prodOf(pd.id);
  if(p.colors.length&&!pd.color){$('pdErr').textContent='اختاري اللون الأول';return}
  if(p.sizes.length&&!pd.size){$('pdErr').textContent='اختاري المقاس الأول';return}
  {const sf=stockFor(p,pd.size);if(sf!=null&&sf<=0){$('pdErr').textContent='المقاس ده نفد، اختاري مقاس تاني';return}}
- addCart(p.id,pd.color,pd.size);
+ $('pdErr').textContent='';
+ const ok=addCart(p.id,pd.color,pd.size,pd.q||1,buy===true);
+ if(buy===true&&ok)checkout();
 }
 function renderPdRev(){
  const p=prodOf(pd.id),rs=reviews.filter(x=>x.pid===p.id).sort((a,b)=>(b.ts||0)-(a.ts||0));
@@ -732,11 +778,14 @@ function quickAdd(id){
  if(p.colors.length||p.sizes.length){openPd(id);toast('اختاري اللون والمقاس');return}
  addCart(id,'','');
 }
-function addCart(id,color,size){
+function addCart(id,color,size,q,silent){
+ q=Math.max(1,+q||1);
  const i=cart.find(x=>x.id===id&&(x.color||'')===(color||'')&&(x.size||'')===(size||''));
- {const pp=prodOf(id);if(pp&&pp.sizeStock&&size&&size in pp.sizeStock&&((i?i.q:0)+1)>pp.sizeStock[size]){toast('المتاح من مقاس '+size+' هو '+pp.sizeStock[size]+' فقط');return}}
- if(i)i.q++;else cart.push({id,color:color||'',size:size||'',q:1});
- save('cart',cart);updCart();toast('تمت الإضافة للسلة ✓');
+ const pp=prodOf(id);
+ if(pp){const mx=stockFor(pp,size);if(mx!=null&&((i?i.q:0)+q)>mx){toast(pp.sizeStock&&size?'المتاح من مقاس '+size+' هو '+mx+' فقط':'المتاح من المنتج ده '+mx+' فقط');return false}}
+ if(i)i.q+=q;else cart.push({id,color:color||'',size:size||'',q});
+ save('cart',cart);updCart();if(!silent)toast('تمت الإضافة للسلة ✓');
+ return true;
 }
 function updCart(){$('cartCount').textContent=cart.reduce((a,b)=>a+b.q,0)}
 function openCart(){renderCart();$('cart').classList.add('show');$('cartOv').classList.add('show')}
