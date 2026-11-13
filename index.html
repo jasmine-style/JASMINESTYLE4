@@ -452,8 +452,9 @@ table.sg th{background:#fff0f5}
   <label>السعر الأصلي قبل الخصم (اختياري)</label><input id="po" type="number" min="0">
   <label>وصف المنتج</label><textarea id="pdsc" rows="3"></textarea>
   <label>الخامة</label><input id="pmat">
-  <label>الألوان المتاحة (افصلي بينها بفاصلة)</label><input id="pcol" placeholder="أسود, وردي, بيج">
-  <label>المقاسات المتاحة (افصلي بينها بفاصلة)</label><input id="psz" placeholder="S, M, L, XL">
+  <label>الألوان المتاحة (افصلي بينها بفاصلة أو /)</label><input id="pcol" placeholder="أسود / وردي / بيج">
+  <label>المقاسات المتاحة (افصلي بينها بفاصلة أو /)</label><input id="psz" placeholder="S / M / L / XL" oninput="renderSzq()">
+  <div id="szq" class="grid2" style="margin-top:6px"></div><div id="szqNote" style="font-size:12px;color:var(--muted);margin-top:4px"></div>
   <label>الكمية في المخزون (سيبيها فاضية لو غير محدودة)</label><input id="pst" type="number" min="0">
   <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="pfeat" style="width:auto">⭐ منتج مميز (يظهر في الرئيسية)</label>
   <label>صور المنتج (لحد 4 صور)</label><input id="pf" type="file" accept="image/*" multiple>
@@ -512,7 +513,7 @@ const hasLocal=k=>{try{return localStorage.getItem('jsw_'+k)!==null}catch(e){ret
 const save=(k,v)=>{try{localStorage.setItem('jsw_'+k,JSON.stringify(v))}catch(e){toast('المساحة ممتلئة، استخدمي صور أصغر')}if(k==='cats'||k==='prods'||k==='settings'||k==='coupons')schedAuto()};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2800)}
-const list=s=>String(s||'').split(/[,،]/).map(x=>x.trim()).filter(Boolean);
+const list=s=>String(s||'').split(/[,،\/\\]/).map(x=>x.trim()).filter(Boolean);
 const money=n=>Math.round(+n||0).toLocaleString('en-US');
 const dayKey=ts=>{const d=new Date(ts);return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
 
@@ -525,6 +526,7 @@ function normProd(p){
  q.desc=q.desc||'';q.material=q.material||'';
  q.sold=+q.sold||0;
  q.stock=(q.stock===''||q.stock==null)?null:+q.stock;
+ if(q.sizeStock&&typeof q.sizeStock==='object'&&q.sizes.length){const ss={};let t=0;q.sizes.forEach(z=>{const v=Math.max(0,parseInt(q.sizeStock[z])||0);ss[z]=v;t+=v});q.sizeStock=ss;q.stock=t}else delete q.sizeStock;
  q.created=q.created||q.id||0;
  q.old=+q.old||0;q.price=+q.price||0;
  return q;
@@ -578,6 +580,10 @@ function rating(pid){const r=reviews.filter(x=>x.pid===pid);return {n:r.length,a
 const starsTxt=n=>{n=Math.round(n);return '★'.repeat(n)+'☆'.repeat(5-n)};
 const priceHtml=p=>`<div class="price">${p.old>p.price?`<s>${money(p.old)} ج.م</s>`:''}${money(p.price)} ج.م</div>`;
 const outOf=p=>p.stock!=null&&p.stock<=0;
+const stockFor=(p,z)=>(p.sizeStock&&z&&z in p.sizeStock)?p.sizeStock[z]:p.stock;
+const sizeSum=p=>Object.values(p.sizeStock).reduce((a,b)=>a+b,0);
+function stkDec(p,it){if(p.sizeStock&&it.size&&it.size in p.sizeStock){p.sizeStock[it.size]=Math.max(0,p.sizeStock[it.size]-it.q);p.stock=sizeSum(p)}else if(p.stock!=null)p.stock=Math.max(0,p.stock-it.q)}
+function stkInc(p,it){if(p.sizeStock&&it.size&&it.size in p.sizeStock){p.sizeStock[it.size]+=it.q;p.stock=sizeSum(p)}else if(p.stock!=null)p.stock+=it.q}
 function card(p){
  const rt=rating(p.id),out=outOf(p),im=p.imgs[0];
  return `<div class="prod"><div class="pimg" onclick="openPd(${p.id})">${im?`<img loading="lazy" src="${im}" alt="">`:icon(p.cat)}${p.old>p.price?`<span class="tag">خصم ${Math.round((1-p.price/p.old)*100)}%</span>`:''}${out?'<span class="tag" style="background:#555;top:40px">نفدت الكمية</span>':''}<button class="heart" onclick="event.stopPropagation();togFav(${p.id})">${favs.includes(p.id)?'❤️':'🤍'}</button></div><div class="pinfo"><div class="pname" onclick="openPd(${p.id})" style="cursor:pointer">${esc(p.name)}</div>${rt.n?`<div class="stars" style="font-size:13px">${starsTxt(rt.avg)} <small style="color:var(--muted)">(${rt.n})</small></div>`:''}${priceHtml(p)}<button class="btn sm ${out?'line':''}" onclick="${out?'notifyMe':'quickAdd'}(${p.id})">${out?'🔔 نبهيني لما يتوفر':'أضيفي للسلة'}</button></div></div>`;
@@ -667,8 +673,8 @@ function renderPdTop(){
  ${p.desc?`<p style="margin:10px 0;white-space:pre-line">${esc(p.desc)}</p>`:''}
  ${p.material?`<p><b>الخامة:</b> ${esc(p.material)}</p>`:''}
  ${p.colors.length?`<label>اللون</label><div>${p.colors.map(c=>`<button class="opt ${pd.color===c?'on':''}" onclick="pd.color='${esc(c).replace(/'/g,'')}';renderPdTop()">${esc(c)}</button>`).join('')}</div>`:''}
- ${p.sizes.length?`<label>المقاس <a onclick="openSG()" style="color:var(--rose);cursor:pointer;font-weight:400">📏 دليل المقاسات</a></label><div>${p.sizes.map(s=>`<button class="opt ${pd.size===s?'on':''}" onclick="pd.size='${esc(s).replace(/'/g,'')}';renderPdTop()">${esc(s)}</button>`).join('')}</div>`:''}
- ${p.stock!=null&&p.stock>0&&p.stock<=lowLimit()?`<p style="color:var(--red);font-size:14px">⚠️ متبقي ${p.stock} قطع فقط</p>`:''}
+ ${p.sizes.length?`<label>المقاس <a onclick="openSG()" style="color:var(--rose);cursor:pointer;font-weight:400">📏 دليل المقاسات</a></label><div>${p.sizes.map(s=>{const so=p.sizeStock&&p.sizeStock[s]<=0;return `<button class="opt ${pd.size===s?'on':''}" ${so?'disabled style="opacity:.4;text-decoration:line-through" title="نفد"':''} onclick="pd.size='${esc(s).replace(/'/g,'')}';renderPdTop()">${esc(s)}</button>`}).join('')}</div>`:''}
+ ${(()=>{const n=stockFor(p,pd.size);return n!=null&&n>0&&n<=lowLimit()?`<p style="color:var(--red);font-size:14px">⚠️ متبقي ${n} قطع فقط${p.sizeStock&&pd.size?' من مقاس '+esc(pd.size):''}</p>`:''})()}
  <div class="err" id="pdErr"></div>
  <div class="row" style="margin-top:6px">${out?`<button class="btn line" onclick="notifyMe(${p.id})">🔔 نبهيني لما يتوفر</button>`:'<button class="btn" onclick="pdAdd()">🛒 أضيفي للسلة</button>'}<a class="btn green" target="_blank" rel="noopener" href="https://wa.me/${waNum()}?text=${encodeURIComponent('استفسار عن: '+p.name+' ('+p.price+' ج.م)')}">💬 اسألي على واتساب</a></div>
  <div class="row" style="margin-top:8px"><button class="btn sm line" onclick="shareProd()">📤 شاركي مع صحابك</button><button class="btn sm line" onclick="copyProd()">🔗 نسخ الرابط</button><button class="btn sm line" onclick="togCmp(${p.id})">${cmp.includes(p.id)?'✓ في المقارنة':'⚖️ أضيفي للمقارنة'}</button>${cmp.length>=2?`<button class="btn sm" onclick="openCmp()">عرض المقارنة (${cmp.length})</button>`:''}</div>
@@ -685,6 +691,7 @@ function pdAdd(){
  const p=prodOf(pd.id);
  if(p.colors.length&&!pd.color){$('pdErr').textContent='اختاري اللون الأول';return}
  if(p.sizes.length&&!pd.size){$('pdErr').textContent='اختاري المقاس الأول';return}
+ {const sf=stockFor(p,pd.size);if(sf!=null&&sf<=0){$('pdErr').textContent='المقاس ده نفد، اختاري مقاس تاني';return}}
  addCart(p.id,pd.color,pd.size);
 }
 function renderPdRev(){
@@ -727,6 +734,7 @@ function quickAdd(id){
 }
 function addCart(id,color,size){
  const i=cart.find(x=>x.id===id&&(x.color||'')===(color||'')&&(x.size||'')===(size||''));
+ {const pp=prodOf(id);if(pp&&pp.sizeStock&&size&&size in pp.sizeStock&&((i?i.q:0)+1)>pp.sizeStock[size]){toast('المتاح من مقاس '+size+' هو '+pp.sizeStock[size]+' فقط');return}}
  if(i)i.q++;else cart.push({id,color:color||'',size:size||'',q:1});
  save('cart',cart);updCart();toast('تمت الإضافة للسلة ✓');
 }
@@ -903,7 +911,7 @@ async function placeOrder(){
   if(!s||!t||!rcpt){fail('لدفع فودافون كاش اكتبي الرقم المحوّل منه ورقم العملية وارفعي صورة التحويل');return}
   vf={sender:s,tx:t,img:rcpt};
  }
- const bad=cartLines().find(l=>outOf(l.p)||(l.p.stock!=null&&l.i.q>l.p.stock));
+ const bad=cartLines().find(l=>outOf(l.p)||(stockFor(l.p,l.i.size)!=null&&l.i.q>stockFor(l.p,l.i.size)));
  if(bad){fail('للأسف "'+bad.p.name+'" الكمية المتاحة منه غير كافية');return}
  if(!window._cfOk){
   const t0=totals();$('cfMsg').style.whiteSpace='pre-line';
@@ -1170,10 +1178,10 @@ async function ordSt(id,s){
  o.status=s;
  const act=['قيد التجهيز','تم الشحن','خرج للتوصيل','تم التسليم'].includes(s);
  if(act&&!o.stockDone){
-  for(const it of o.items||[]){const p=prodOf(it.pid);if(!p)continue;if(p.stock!=null)p.stock=Math.max(0,p.stock-it.q);p.sold=(p.sold||0)+it.q;wr('products',p.id,normProd(p));logAct('stock','خصم '+it.q+' من "'+p.name+'" (طلب #'+o.no+') — المتبقي '+(p.stock==null?'∞':p.stock))}
+  for(const it of o.items||[]){const p=prodOf(it.pid);if(!p)continue;stkDec(p,it);p.sold=(p.sold||0)+it.q;wr('products',p.id,normProd(p));logAct('stock','خصم '+it.q+' من "'+p.name+'" (طلب #'+o.no+') — المتبقي '+(p.stock==null?'∞':p.stock))}
   o.stockDone=true;save('prods',prods);
  }else if(s==='ملغي'&&o.stockDone){
-  for(const it of o.items||[]){const p=prodOf(it.pid);if(!p)continue;if(p.stock!=null)p.stock+=it.q;p.sold=Math.max(0,(p.sold||0)-it.q);wr('products',p.id,normProd(p));logAct('stock','إرجاع '+it.q+' إلى "'+p.name+'" (إلغاء طلب #'+o.no+') — المتبقي '+(p.stock==null?'∞':p.stock))}
+  for(const it of o.items||[]){const p=prodOf(it.pid);if(!p)continue;stkInc(p,it);p.sold=Math.max(0,(p.sold||0)-it.q);wr('products',p.id,normProd(p));logAct('stock','إرجاع '+it.q+' إلى "'+p.name+'" (إلغاء طلب #'+o.no+') — المتبقي '+(p.stock==null?'∞':p.stock))}
   o.stockDone=false;save('prods',prods);
  }
  if(!cloudAdmin())save('orders',orders);
@@ -1184,7 +1192,7 @@ function togglePay(id){const o=orders.find(x=>x.id===id);o.payOk=!o.payOk;if(!cl
 function delOrd(id){if(isStaff()){toast('غير مسموح');return}ask('حذف الطلب؟',()=>{const dd=orders.find(o=>o.id===id);if(dd)logAct('order','حذف طلب #'+dd.no);const d=orders.find(o=>o.id===id);if(cloudAdmin()&&d)fbDel(d).catch(()=>toast('تعذر الحذف من السيرفر'));orders=orders.filter(o=>o.id!==id);if(!cloudAdmin())save('orders',orders);tab('orders');toast('تم الحذف')})}
 
 function prodsTab(){
- return `<button class="btn" style="margin-bottom:12px" onclick="editProd()">+ إضافة منتج</button><div class="tw"><table class="tbl"><tr><th>صورة</th><th>الاسم</th><th>القسم</th><th>السعر</th><th>المخزون</th><th>مبيعات</th><th></th></tr>${prods.map(p=>`<tr><td>${p.imgs[0]?`<img src="${p.imgs[0]}">`:icon(p.cat)}</td><td>${esc(p.name)}<br><small style="color:var(--muted)">${p.colors.length?p.colors.map(esc).join('، '):''} ${p.sizes.length?'| '+p.sizes.map(esc).join(' '):''}</small></td><td>${esc(catName(p.cat))}</td><td>${money(p.price)}${p.old>p.price?` <s>${money(p.old)}</s>`:''}</td><td>${p.stock==null?'∞':p.stock}</td><td>${p.sold||0}</td><td><div class="row"><button class="btn sm dark" onclick="editProd(${p.id})">تعديل</button><button class="btn sm red" onclick="delProd(${p.id})">حذف</button></div></td></tr>`).join('')}</table></div>`;
+ return `<button class="btn" style="margin-bottom:12px" onclick="editProd()">+ إضافة منتج</button><div class="tw"><table class="tbl"><tr><th>صورة</th><th>الاسم</th><th>القسم</th><th>السعر</th><th>المخزون</th><th>مبيعات</th><th></th></tr>${prods.map(p=>`<tr><td>${p.imgs[0]?`<img src="${p.imgs[0]}">`:icon(p.cat)}</td><td>${esc(p.name)}<br><small style="color:var(--muted)">${p.colors.length?p.colors.map(esc).join('، '):''} ${p.sizes.length?'| '+p.sizes.map(z=>esc(z)+(p.sizeStock?'('+p.sizeStock[z]+')':'')).join(' '):''}</small></td><td>${esc(catName(p.cat))}</td><td>${money(p.price)}${p.old>p.price?` <s>${money(p.old)}</s>`:''}</td><td>${p.stock==null?'∞':p.stock}</td><td>${p.sold||0}</td><td><div class="row"><button class="btn sm dark" onclick="editProd(${p.id})">تعديل</button><button class="btn sm red" onclick="delProd(${p.id})">حذف</button></div></td></tr>`).join('')}</table></div>`;
 }
 function catsTab(){
  return `<div class="row" style="margin-bottom:12px"><input id="ci" placeholder="إيموجي" style="width:90px"><input id="cnm" placeholder="اسم القسم" style="flex:1;min-width:140px"><button class="btn" onclick="addCat()">إضافة</button></div><div class="tw"><table class="tbl"><tr><th></th><th>القسم</th><th></th></tr>${cats.map(c=>`<tr><td style="font-size:24px">${c.icon}</td><td>${esc(c.name)}</td><td><button class="btn sm red" onclick="delCat('${c.id}')">حذف</button></td></tr>`).join('')}</table></div>`;
@@ -1201,12 +1209,26 @@ function delProd(id){ask('حذف المنتج؟ (هيتحفظ في المحذو�
  prods=prods.filter(p=>p.id!==id);save('prods',prods);rm('products',id);tab('prods');toast('تم حذف المنتج')})}
 
 let pimgs=[];
+let szqVals={};
+function renderSzq(){
+ const box=$('szq');box.querySelectorAll('input').forEach(i=>{szqVals[i.dataset.s]=i.value});
+ const sizes=list($('psz').value);
+ box.innerHTML=sizes.map(z=>`<div><label style="margin:0">كمية ${esc(z)}</label><input type="number" min="0" inputmode="numeric" data-s="${esc(z)}" value="${esc(String(szqVals[z]==null?'':szqVals[z]))}" oninput="szqTot()" placeholder="0"></div>`).join('');
+ szqTot();
+}
+function szqTot(){
+ const ins=[...$('szq').querySelectorAll('input')],any=ins.some(i=>i.value!==''),pst=$('pst');
+ if(any){pst.value=ins.reduce((a,i)=>a+(+i.value||0),0);pst.readOnly=true;pst.style.opacity=.6}
+ else{if(pst.readOnly)pst.value='';pst.readOnly=false;pst.style.opacity=1}
+ $('szqNote').textContent=ins.length?(any?'إجمالي المخزون بيتحسب تلقائي من كميات المقاسات. المقاس اللي كميته 0 هيظهر "نفد".':'اكتبي كمية كل مقاس، أو سيبيها فاضية وحدّدي إجمالي واحد تحت.'):'';
+}
 function editProd(id){
  const p=id?prodOf(id):normProd({id:0,name:'',cat:cats[0]&&cats[0].id,price:'',old:'',imgs:[]});
  $('peTitle').textContent=id?'تعديل منتج':'منتج جديد';
  $('pid').value=p.id;$('pn').value=p.name;$('pp').value=p.price||'';$('po').value=p.old||'';
  $('pdsc').value=p.desc;$('pmat').value=p.material;$('pcol').value=p.colors.join(', ');$('psz').value=p.sizes.join(', ');
  $('pst').value=p.stock==null?'':p.stock;$('pfeat').checked=!!p.featured;
+ $('szq').innerHTML='';szqVals=p.sizeStock?{...p.sizeStock}:{};renderSzq();
  $('pc').innerHTML=cats.map(c=>`<option value="${c.id}" ${c.id===p.cat?'selected':''}>${esc(c.name)}</option>`).join('');
  pimgs=[...p.imgs];$('pf').value='';$('perr').textContent='';prev();
  $('peOv').classList.add('show');
@@ -1221,7 +1243,9 @@ function saveProd(){
  const n=$('pn').value.trim(),pr=+$('pp').value;
  if(!n||!pr){$('perr').textContent='الاسم والسعر مطلوبان';return}
  const id=+$('pid').value,old=id?prodOf(id):null;
- const d=normProd({id:id||Date.now(),name:n,featured:$('pfeat').checked,cat:$('pc').value,price:pr,old:+$('po').value||0,desc:$('pdsc').value.trim(),material:$('pmat').value.trim(),colors:list($('pcol').value),sizes:list($('psz').value),stock:$('pst').value,imgs:pimgs,sold:old?old.sold:0,created:old?old.created:Date.now()});
+ const szIns=[...$('szq').querySelectorAll('input')];
+ const sizeStock=szIns.some(i=>i.value!=='')?Object.fromEntries(szIns.map(i=>[i.dataset.s,Math.max(0,parseInt(i.value)||0)])):null;
+ const d=normProd({id:id||Date.now(),name:n,featured:$('pfeat').checked,cat:$('pc').value,price:pr,old:+$('po').value||0,desc:$('pdsc').value.trim(),material:$('pmat').value.trim(),colors:list($('pcol').value),sizes:list($('psz').value),stock:$('pst').value,sizeStock,imgs:pimgs,sold:old?old.sold:0,created:old?old.created:Date.now()});
  if(id)prods=prods.map(p=>p.id===id?d:p);else prods.unshift(d);
  save('prods',prods);wr('products',d.id,d);
  logAct('prod',(id?'تعديل':'إضافة')+' منتج: '+d.name);
