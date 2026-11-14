@@ -192,6 +192,35 @@ table.sg th{background:#fff0f5}
 .buynow{display:block;width:100%;margin-top:12px;border-radius:22px;padding:16px;font-size:18px}
 .buynow.dis{opacity:.65}
 .wabtn{display:block;width:100%;margin-top:12px;border-radius:22px;padding:15px;font-size:17px;background:#e8f8ee;color:#1a9a50;border:1.5px solid #bfe8cf;font-weight:700;text-align:center}
+
+/* عرض فلاش */
+.flsec{max-width:1200px;margin:22px auto 0;padding:0 16px}
+.flban{background:linear-gradient(135deg,#4a2335 0%,#8a3156 55%,#d6638a 100%);border-radius:20px;padding:22px 16px 18px;color:#fff;position:relative;overflow:hidden;box-shadow:0 8px 26px rgba(138,49,86,.28)}
+.flban:before{content:"🔥";position:absolute;font-size:110px;opacity:.12;top:-14px;left:10px}
+.flban h2{text-align:center;font-size:clamp(22px,5vw,32px);position:relative}
+.flban .fs{text-align:center;opacity:.9;margin:2px 0 12px;position:relative}
+.flseg{display:flex;justify-content:center;gap:8px;direction:ltr;position:relative;margin-bottom:16px}
+.flseg div{background:#fff;color:var(--red);border-radius:12px;min-width:64px;padding:6px 8px;text-align:center;font-weight:800;font-size:clamp(24px,6vw,34px);line-height:1.1;font-variant-numeric:tabular-nums}
+.flseg div small{display:block;font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}
+.flrow{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 8px;scroll-snap-type:x mandatory;position:relative}
+.flrow .prod{flex:0 0 200px;scroll-snap-align:start;color:var(--ink)}
+.flrow::-webkit-scrollbar{height:6px}.flrow::-webkit-scrollbar-thumb{background:rgba(255,255,255,.5);border-radius:6px}
+
+.flov{z-index:140}
+.flbox{max-width:760px;max-height:94vh;padding:0;overflow:auto;background:#fff}
+.flhd{background:linear-gradient(135deg,var(--dark),#8a3156);color:#fff;text-align:center;padding:22px 16px 16px;position:relative}
+.flhd h3{font-size:24px;margin-bottom:4px}
+.flhd small{opacity:.85}
+.flx{position:absolute;top:10px;left:10px;background:rgba(255,255,255,.2);color:#fff;border-radius:50%;width:32px;height:32px;font-size:18px}
+.flit{display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+.flit .th{width:110px;height:136px;border-radius:10px;background:linear-gradient(135deg,#fde4ee,#f4b6cd);flex:none;display:flex;align-items:center;justify-content:center;font-size:30px;overflow:hidden;position:relative;cursor:pointer}
+.flit .th img{width:100%;height:100%;object-fit:cover}
+.flit .m{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.flit .m b{font-size:17px}.flit .price{font-size:19px}.flbig{display:inline-flex;direction:ltr;margin-top:12px;gap:6px;background:#fff;color:var(--red);font-weight:800;font-size:clamp(26px,7vw,40px);padding:4px 18px;border-radius:14px;font-variant-numeric:tabular-nums}.flit .flcd{font-size:16px;padding:3px 10px}
+.flpct{background:var(--red);color:#fff;font-size:12px;font-weight:700;padding:1px 10px;border-radius:20px;align-self:flex-start}
+.flcd{display:inline-flex;gap:4px;direction:ltr;align-self:flex-start;font-weight:800;font-size:14px;font-variant-numeric:tabular-nums;color:var(--red);background:#fff0f0;border:1px dashed var(--red);border-radius:8px;padding:2px 8px}
+.flchip{display:inline-block;background:#fff0f0;color:var(--red);border:1px dashed var(--red);border-radius:8px;padding:1px 8px;font-size:12px;font-weight:700;direction:ltr;align-self:flex-start;font-variant-numeric:tabular-nums}
+.flft{padding:12px 14px;text-align:center}
 </style>
 </head>
 <body>
@@ -226,6 +255,8 @@ table.sg th{background:#fff0f5}
  <p id="heroTxt"></p>
  <button class="btn" onclick="go('shop')">تسوقي الآن</button>
 </section>
+
+<div class="flsec" id="flashSec" style="display:none"></div>
 
 <div class="wrap">
  <h2 class="t">تسوقي حسب القسم</h2>
@@ -325,6 +356,7 @@ table.sg th{background:#fff0f5}
  </div>
  <div class="tabs" id="tabs">
   <button data-t="dash" onclick="tab('dash')">لوحة التحكم</button>
+  <button data-t="visits" onclick="tab('visits')">👥 الزوار</button>
   <button data-t="orders" onclick="tab('orders')">الطلبات</button>
   <button data-t="prods" onclick="tab('prods')">المنتجات</button>
   <button data-t="cats" onclick="tab('cats')">الأقسام</button>
@@ -364,6 +396,15 @@ table.sg th{background:#fff0f5}
  <div class="box"><h3>🔔 العروض والتخفيضات</h3><div id="ntList"></div>
   <button class="btn sm line" style="margin-top:10px" onclick="enableNotif()">تفعيل تنبيهات المتصفح</button>
   <p style="font-size:12px;color:var(--muted);margin-top:6px">التنبيه بيوصلك لما تفتحي الموقع، بعد موافقتك.</p>
+ </div>
+</div>
+
+<!-- Flash offer popup -->
+<div class="ov flov" id="flOv" onclick="if(event.target===this)closeFlash()">
+ <div class="box flbox">
+  <div class="flhd"><button class="flx" onclick="closeFlash()">×</button><h3 id="flTitle">🔥 عرض لفترة محدودة</h3><small>العرض بينتهي بعد ⏳</small><br><span class="flbig" id="flBig" data-cd="0">00:00:00</span></div>
+  <div id="flList"></div>
+  <div class="flft"><button class="btn" onclick="closeFlash();go('shop','sale')">تسوقي العروض 🛍️</button></div>
  </div>
 </div>
 
@@ -542,6 +583,7 @@ const dayKey=ts=>{const d=new Date(ts);return d.getFullYear()+'-'+(d.getMonth()+
 
 function normProd(p){
  const q={...p};
+ if(q._fb){q.price=q._fb.price;q.old=q._fb.old;delete q._fb}
  q.imgs=Array.isArray(q.imgs)?q.imgs.filter(Boolean):(q.img?[q.img]:[]);
  delete q.img;
  q.colors=Array.isArray(q.colors)?q.colors:[];
@@ -598,6 +640,111 @@ function applySettings(){
  renderFaq();
 }
 
+
+/* ============ عرض الفلاش (خصم + عداد + نافذة مرة واحدة) ============ */
+const flashActive=()=>{const f=settings.flash;return !!(f&&f.endTs>Date.now()&&(f.items||[]).length)};
+function flashApply(){
+ prods.forEach(p=>{if(p._fb){p.price=p._fb.price;p.old=p._fb.old;delete p._fb}});
+ if(!flashActive())return;
+ settings.flash.items.forEach(it=>{
+  const p=prodOf(it.pid);if(!p||!(it.pct>0))return;
+  p._fb={price:p.price,old:p.old};
+  const base=p.old>p.price?p.old:p.price;
+  p.old=base;p.price=Math.max(1,Math.round(p.price*(1-it.pct/100)));
+ });
+}
+function fmtCd(ms){
+ let t=Math.max(0,Math.floor(ms/1000));const d=Math.floor(t/86400);t%=86400;
+ const h=Math.floor(t/3600),m=Math.floor(t%3600/60),s=t%60,z=n=>String(n).padStart(2,'0');
+ return (d?d+'ي ':'')+z(h)+':'+z(m)+':'+z(s);
+}
+const flashItem=p=>flashActive()&&(settings.flash.items||[]).some(i=>i.pid===p.id&&p._fb);
+const flashChip=p=>flashItem(p)?`<span class="flchip" data-cd="${settings.flash.endTs}">⏳ ${fmtCd(settings.flash.endTs-Date.now())}</span>`:'';
+function openFlash(){
+ if(!flashActive())return;
+ const f=settings.flash;
+ $('flTitle').textContent=f.title||'🔥 عرض لفترة محدودة';
+ $('flList').innerHTML=f.items.map(it=>{const p=prodOf(it.pid);if(!p||!p._fb)return '';
+  return `<div class="flit"><div class="th" onclick="closeFlash();openPd(${p.id})">${p.imgs[0]?`<img src="${p.imgs[0]}" alt="">`:icon(p.cat)}</div><div class="m"><b>${esc(p.name)}</b><span class="flpct">خصم ${it.pct}%</span>${priceHtml(p)}<span class="flcd" data-cd="${f.endTs}">${fmtCd(f.endTs-Date.now())}</span></div><button class="btn sm" onclick="closeFlash();openPd(${p.id})">شوفي</button></div>`}).join('');
+ const bg=$('flBig');bg.dataset.cd=f.endTs;bg.textContent=fmtCd(f.endTs-Date.now());
+ $('flOv').classList.add('show');
+}
+function closeFlash(){$('flOv').classList.remove('show')}
+function flashAutoShow(){
+ if(!flashActive())return;
+ if(load('seenFlash',0)===settings.flash.id)return;
+ save('seenFlash',settings.flash.id);
+ setTimeout(openFlash,700);
+}
+setInterval(()=>{
+ const sg=$('flSeg');if(sg)sg.innerHTML=segHtml(+sg.dataset.end-Date.now());
+ const els=document.querySelectorAll('[data-cd]');
+ els.forEach(e=>{const ms=+e.dataset.cd-Date.now();const t=fmtCd(ms);e.textContent=e.classList.contains('flchip')?'⏳ '+t:t});
+ if(settings.flash&&settings.flash.endTs&&settings.flash.endTs<=Date.now()&&prods.some(p=>p._fb)){flashApply();closeFlash();try{renderAll()}catch(e){}}
+},1000);
+
+
+function segHtml(ms){let t=Math.max(0,Math.floor(ms/1000));const d=Math.floor(t/86400);t%=86400;const h=Math.floor(t/3600),m=Math.floor(t%3600/60),s=t%60,z=n=>String(n).padStart(2,'0');
+ return (d?`<div>${d}<small>يوم</small></div>`:'')+`<div>${z(h)}<small>ساعة</small></div><div>${z(m)}<small>دقيقة</small></div><div>${z(s)}<small>ثانية</small></div>`}
+function renderFlashSec(){
+ const el=$('flashSec');if(!el)return;
+ if(!flashActive()){el.style.display='none';el.innerHTML='';return}
+ const f=settings.flash,L=f.items.map(i=>prodOf(i.pid)).filter(p=>p&&p._fb);
+ if(!L.length){el.style.display='none';return}
+ el.innerHTML=`<div class="flban"><h2>${esc(f.title||'🔥 عرض لفترة محدودة')}</h2><div class="fs">العرض بينتهي بعد</div><div class="flseg" id="flSeg" data-end="${f.endTs}">${segHtml(f.endTs-Date.now())}</div><div class="flrow">${L.map(card).join('')}</div></div>`;
+ el.style.display='';
+}
+
+/* إدارة: نشر / إيقاف العرض */
+function flashAdminHtml(){
+ const f=settings.flash,act=flashActive();
+ const rows=prods.map(p=>{const it=act?(f.items||[]).find(i=>i.pid===p.id):null;const base=p._fb?p._fb.price:p.price;
+  return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)"><input type="checkbox" id="flc${p.id}" ${it?'checked':''} style="width:auto"><label for="flc${p.id}" style="flex:1;margin:0">${esc(p.name)} <small style="color:var(--muted)">(${money(base)} ج.م)</small></label><input id="flp${p.id}" type="number" min="1" max="95" value="${it?it.pct:20}" style="width:70px"><span>%</span></div>`}).join('');
+ return `<div class="card2"><h3>⚡ عرض فلاش (نافذة كبيرة + عداد تنازلي)</h3>
+ <p style="font-size:13px;color:var(--muted);margin-bottom:6px">بتظهر مرة واحدة لكل عميلة أول ما تفتح الموقع، وفيها المنتجات اللي بتختاريها بنسبة الخصم وعداد جنب كل منتج. الخصم بيتطبق فعلياً على السعر وبيرجع لسعره الأصلي لوحده لما الوقت يخلص.</p>
+ ${act?`<div class="warn" style="margin-bottom:8px">✅ في عرض شغال دلوقتي وبينتهي: ${new Date(f.endTs).toLocaleString('ar-EG')} — <b id="flAdmCd" data-cd="${f.endTs}">${fmtCd(f.endTs-Date.now())}</b></div>`:''}
+ <label>عنوان النافذة</label><input id="flt" value="${esc(act?f.title:'🔥 عرض لفترة محدودة')}">
+ <label>مدة العرض</label>
+ <div class="row" style="flex-wrap:nowrap;gap:8px"><div style="flex:1"><small>أيام</small><input id="fld" type="number" min="0" value="0"></div><div style="flex:1"><small>ساعات</small><input id="flh" type="number" min="0" value="24"></div><div style="flex:1"><small>دقائق</small><input id="flm" type="number" min="0" value="0"></div></div>
+ <label style="margin-top:8px">المنتجات ونسبة الخصم</label><div style="max-height:260px;overflow:auto">${rows}</div>
+ <div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm" onclick="publishFlash()">${act?'تحديث العرض':'نشر العرض'}</button>${act?'<button class="btn sm line" onclick="openFlash()">👁️ معاينة النافذة</button>':''}${act?'<button class="btn sm red" onclick="stopFlash()">إيقاف العرض</button>':''}</div></div>`;
+}
+function publishFlash(){
+ const items=prods.map(p=>({pid:p.id,pct:Math.min(95,Math.max(0,+$('flp'+p.id).value||0)),on:$('flc'+p.id).checked})).filter(i=>i.on&&i.pct>0).map(({pid,pct})=>({pid,pct}));
+ const ms=((+$('fld').value||0)*86400+(+$('flh').value||0)*3600+(+$('flm').value||0)*60)*1000;
+ if(!items.length){toast('اختاري منتج واحد على الأقل');return}
+ if(ms<=0){toast('حددي مدة العرض');return}
+ settings.flash={id:Date.now(),title:$('flt').value.trim(),items,endTs:Date.now()+ms,ts:Date.now()};
+ flashApply();persistSettings();tab('offers');toast('تم نشر عرض الفلاش ✓');openFlash();
+}
+function stopFlash(){ask('إيقاف عرض الفلاش؟',()=>{settings.flash=null;flashApply();persistSettings();tab('offers');toast('تم إيقاف العرض')})}
+
+
+/* ============ عدّاد الزوار ============ */
+let visitStats=null;
+async function trackVisit(){
+ try{
+  if(cloudAdmin())return;
+  const k=dayKey(Date.now());
+  if(load('visitDay','')===k)return;
+  const first=!load('visitedBefore',false);
+  save('visitDay',k);save('visitedBefore',true);
+  const x=await withTimeout(fbInit(),6000);
+  const d={total:x.F.increment(1),['d_'+k]:x.F.increment(1)};
+  if(first)d.unique=x.F.increment(1);
+  await withTimeout(x.F.setDoc(x.F.doc(x.db,'stats','visits'),d,{merge:true}),6000);
+ }catch(e){}
+}
+async function loadVisits(){
+ try{
+  const x=await withTimeout(fbInit(),6000);
+  const sn=await withTimeout(x.F.getDoc(x.F.doc(x.db,'stats','visits')),6000);
+  const D=sn.exists()?sn.data():{};
+  let w=0;for(let i=0;i<7;i++){w+=D['d_'+dayKey(Date.now()-i*864e5)]||0}
+  visitStats={days:D,today:D['d_'+dayKey(Date.now())]||0,week:w,total:D.total||0,unique:D.unique||0,ok:true};
+ }catch(e){visitStats={ok:false}}
+}
+
 /* ============ المتجر ============ */
 function rating(pid){const r=reviews.filter(x=>x.pid===pid);return {n:r.length,avg:r.length?r.reduce((s,x)=>s+(+x.stars||0),0)/r.length:0}}
 const starsTxt=n=>{n=Math.round(n);return '★'.repeat(n)+'☆'.repeat(5-n)};
@@ -609,7 +756,7 @@ function stkDec(p,it){if(p.sizeStock&&it.size&&it.size in p.sizeStock){p.sizeSto
 function stkInc(p,it){if(p.sizeStock&&it.size&&it.size in p.sizeStock){p.sizeStock[it.size]+=it.q;p.stock=sizeSum(p)}else if(p.stock!=null)p.stock+=it.q}
 function card(p){
  const rt=rating(p.id),out=outOf(p),im=p.imgs[0];
- return `<div class="prod"><div class="pimg" onclick="openPd(${p.id})">${im?`<img loading="lazy" src="${im}" alt="">`:icon(p.cat)}${p.old>p.price?`<span class="tag">خصم ${Math.round((1-p.price/p.old)*100)}%</span>`:''}${out?'<span class="tag" style="background:#555;top:40px">نفدت الكمية</span>':''}<button class="heart" onclick="event.stopPropagation();togFav(${p.id})">${favs.includes(p.id)?'❤️':'🤍'}</button></div><div class="pinfo"><div class="pname" onclick="openPd(${p.id})" style="cursor:pointer">${esc(p.name)}</div>${rt.n?`<div class="stars" style="font-size:13px">${starsTxt(rt.avg)} <small style="color:var(--muted)">(${rt.n})</small></div>`:''}${priceHtml(p)}<button class="btn sm ${out?'line':''}" onclick="${out?'notifyMe':'quickAdd'}(${p.id})">${out?'🔔 نبهيني لما يتوفر':'أضيفي للسلة'}</button></div></div>`;
+ return `<div class="prod"><div class="pimg" onclick="openPd(${p.id})">${im?`<img loading="lazy" src="${im}" alt="">`:icon(p.cat)}${p.old>p.price?`<span class="tag">خصم ${Math.round((1-p.price/p.old)*100)}%</span>`:''}${out?'<span class="tag" style="background:#555;top:40px">نفدت الكمية</span>':''}<button class="heart" onclick="event.stopPropagation();togFav(${p.id})">${favs.includes(p.id)?'❤️':'🤍'}</button></div><div class="pinfo"><div class="pname" onclick="openPd(${p.id})" style="cursor:pointer">${esc(p.name)}</div>${rt.n?`<div class="stars" style="font-size:13px">${starsTxt(rt.avg)} <small style="color:var(--muted)">(${rt.n})</small></div>`:''}${flashChip(p)}${priceHtml(p)}<button class="btn sm ${out?'line':''}" onclick="${out?'notifyMe':'quickAdd'}(${p.id})">${out?'🔔 نبهيني لما يتوفر':'أضيفي للسلة'}</button></div></div>`;
 }
 function renderCats(){
  $('cats').innerHTML=cats.map(c=>`<div class="cat" onclick="go('shop','${c.id}')"><i>${c.icon}</i>${esc(c.name)}</div>`).join('');
@@ -638,7 +785,7 @@ function renderGrid(){
  else l.sort((a,b)=>b.created-a.created);
  $('grid').innerHTML=l.length?l.map(card).join(''):'<div class="empty" style="grid-column:1/-1">لا توجد منتجات</div>';
 }
-function renderAll(){renderCats();renderSections();renderGrid();updFav();updCart()}
+function renderAll(){renderFlashSec();renderCats();renderSections();renderGrid();updFav();updCart()}
 function setCat(c){curCat=c;renderCats();renderGrid()}
 function go(page,c){
  $('links').classList.remove('open');
@@ -711,7 +858,7 @@ function renderPdTop(){
  <div class="pdinfo"><div style="color:var(--muted);font-size:13px">${esc(catName(p.cat))}</div>
  <h2>${esc(p.name)}</h2>
  ${rt.n?`<div class="stars">${starsTxt(rt.avg)} <small style="color:var(--muted)">${rt.avg.toFixed(1)} (${rt.n} تقييم)</small></div>`:''}
- <div class="pbox">${priceHtml(p)}${p.old>p.price?`<div><span class="pill ok">وفّرتي ${money(p.old-p.price)} ج.م</span></div>`:''}${!out&&hint?`<div class="hint">${hint}</div>`:''}</div>
+ <div class="pbox">${flashChip(p)}${priceHtml(p)}${p.old>p.price?`<div><span class="pill ok">وفّرتي ${money(p.old-p.price)} ج.م</span></div>`:''}${!out&&hint?`<div class="hint">${hint}</div>`:''}</div>
  ${p.material?`<p style="margin:6px 0"><b>الخامة:</b> ${esc(p.material)}</p>`:''}
  ${colors}${sizes}
  ${(()=>{const n=stockFor(p,pd.size);return n!=null&&n>0&&n<=lowLimit()?`<p style="color:var(--red);font-size:14px">⚠️ متبقي ${n} قطع فقط${p.sizeStock&&pd.size?' من مقاس '+esc(pd.size):''}</p>`:''})()}
@@ -1058,7 +1205,7 @@ function enableNotif(){
  Notification.requestPermission().then(p=>{save('notif',p==='granted');toast(p==='granted'?'تم تفعيل التنبيهات ✓':'تم الإلغاء')});
 }
 async function checkAnn(poll){
- if(poll&&cloudOK){try{const x=await fbInit();const s=await x.F.getDoc(x.F.doc(x.db,'settings','main'));if(s.exists())settings.announces=s.data().announces||[]}catch(e){}}
+ if(poll&&cloudOK){try{const x=await fbInit();const s=await x.F.getDoc(x.F.doc(x.db,'settings','main'));if(s.exists()){const D=s.data();settings.announces=D.announces||[];const nf=D.flash||null;if(JSON.stringify(nf)!==JSON.stringify(settings.flash||null)){settings.flash=nf;flashApply();try{renderAll()}catch(e){}flashAutoShow()}}}catch(e){}}
  const un=annUnseen();updBell();
  if(un.length&&load('notif',false)&&'Notification' in window&&Notification.permission==='granted'&&!_notified.has(un[0].id)){
   _notified.add(un[0].id);try{new Notification(un[0].title,{body:un[0].text})}catch(e){}
@@ -1188,12 +1335,23 @@ async function tab(t){
  if(cloudAdmin()&&['dash','orders','customers','reports','coupons','reviews','returns','alerts','log','stocklog','trash'].includes(t)&&Date.now()-_ordTs>20000){
   P.innerHTML='<div class="empty">جاري التحميل...</div>';await loadAdminOrders();_ordTs=Date.now();
  }
+ if(t==='visits'&&cloudAdmin())await loadVisits();
  const banner=adminMode==='local'?'<div class="warn">⚠️ أنتِ داخلة بالوضع المحلي: التعديلات بتتحفظ على الجهاز ده بس ومش بتتحفظ على السيرفر. للحفظ على السيرفر اخرجي وادخلي بإيميل وكلمة سر Firebase.</div>':'';
- const R={dash,orders:ordersTab,prods:prodsTab,cats:catsTab,coupons:couponsTab,reviews:reviewsTab,customers:customersTab,offers:offersTab,reports:reportsTab,set:setTab,returns:returnsTab,alerts:alertsTab,log:logTab,stocklog:stockTab,trash:trashTab};
+ const R={visits:visitsTab,dash,orders:ordersTab,prods:prodsTab,cats:catsTab,coupons:couponsTab,reviews:reviewsTab,customers:customersTab,offers:offersTab,reports:reportsTab,set:setTab,returns:returnsTab,alerts:alertsTab,log:logTab,stocklog:stockTab,trash:trashTab};
  P.innerHTML=banner+(R[t]?R[t]():'');
 }
 const okOrders=()=>orders.filter(o=>o.status!=='ملغي');
 const sum=l=>l.reduce((s,o)=>s+(+o.total||0),0);
+function visitsTab(){
+ if(!cloudAdmin())return '<div class="warn">عدّاد الزوار بيشتغل بس مع الدخول بحساب Firebase.</div>';
+ const v=visitStats;
+ if(!v||!v.ok)return '<div class="warn">تعذر تحميل عدد الزوار. تأكدي إن قواعد Firestore بتسمح بالقراءة والكتابة على المجموعة <b>stats</b>.</div>';
+ const rows=[];for(let i=0;i<14;i++){const t=Date.now()-i*864e5;rows.push({l:new Date(t).toLocaleDateString('ar-EG',{weekday:'long',day:'numeric',month:'numeric'}),n:v.days['d_'+dayKey(t)]||0})}
+ const mx=Math.max(1,...rows.map(r=>r.n));
+ return `<h3 style="margin-bottom:10px">👥 زوار الموقع</h3><div class="stats"><div class="stat"><b>${v.today}</b>زوار النهاردة</div><div class="stat"><b>${v.week}</b>آخر 7 أيام</div><div class="stat"><b>${v.total}</b>إجمالي الزيارات</div><div class="stat"><b>${v.unique}</b>زوار جُدد (أجهزة مختلفة)</div></div>
+ <div class="card2" style="margin-top:12px"><h3>آخر 14 يوم</h3>${rows.map(r=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--line)"><span style="width:110px;font-size:13px">${r.l}</span><div style="flex:1;background:#f6e8ee;border-radius:6px;height:14px;overflow:hidden"><div style="width:${r.n/mx*100}%;height:100%;background:var(--dark)"></div></div><b style="width:36px;text-align:left">${r.n}</b></div>`).join('')}
+ <p style="font-size:12px;color:var(--muted);margin-top:8px">الجهاز الواحد بيتعد مرة في اليوم، ودخولك كأدمن مش بيتعد.</p></div>`;
+}
 function dash(){
  const now=new Date(),td=dayKey(now.getTime()),mo=now.getFullYear()+'-'+now.getMonth();
  const ok=okOrders();
@@ -1274,7 +1432,7 @@ function szqTot(){
 function editProd(id){
  const p=id?prodOf(id):normProd({id:0,name:'',cat:cats[0]&&cats[0].id,price:'',old:'',imgs:[]});
  $('peTitle').textContent=id?'تعديل منتج':'منتج جديد';
- $('pid').value=p.id;$('pn').value=p.name;$('pp').value=p.price||'';$('po').value=p.old||'';
+ $('pid').value=p.id;$('pn').value=p.name;$('pp').value=(p._fb?p._fb.price:p.price)||'';$('po').value=(p._fb?p._fb.old:p.old)||'';
  $('pdsc').value=p.desc;$('pmat').value=p.material;$('pcol').value=p.colors.join(', ');$('psz').value=p.sizes.join(', ');
  $('pst').value=p.stock==null?'':p.stock;$('pfeat').checked=!!p.featured;
  $('szq').innerHTML='';szqVals=p.sizeStock?{...p.sizeStock}:{};renderSzq();
@@ -1296,7 +1454,7 @@ function saveProd(){
  const sizeStock=szIns.some(i=>i.value!=='')?Object.fromEntries(szIns.map(i=>[i.dataset.s,Math.max(0,parseInt(i.value)||0)])):null;
  const d=normProd({id:id||Date.now(),name:n,featured:$('pfeat').checked,cat:$('pc').value,price:pr,old:+$('po').value||0,desc:$('pdsc').value.trim(),material:$('pmat').value.trim(),colors:list($('pcol').value),sizes:list($('psz').value),stock:$('pst').value,sizeStock,imgs:pimgs,sold:old?old.sold:0,created:old?old.created:Date.now()});
  if(id)prods=prods.map(p=>p.id===id?d:p);else prods.unshift(d);
- save('prods',prods);wr('products',d.id,d);
+ save('prods',prods);wr('products',d.id,d);flashApply();
  logAct('prod',(id?'تعديل':'إضافة')+' منتج: '+d.name);
  if(!old||old.stock!==d.stock)logAct('stock','مخزون "'+d.name+'": '+(old?(old.stock==null?'∞':old.stock):'—')+' ← '+(d.stock==null?'∞':d.stock)+(old?' (تعديل يدوي)':' (منتج جديد)'));
  $('peOv').classList.remove('show');tab('prods');toast('تم الحفظ ✓');
@@ -1340,7 +1498,7 @@ function customersTab(){
 
 function offersTab(){
  const A=settings.announces||[];
- return `<div class="card2"><h3>🔔 إرسال عرض جديد للعميلات</h3><p style="font-size:13px;color:var(--muted);margin-bottom:6px">بيظهر في جرس 🔔 الموقع، وبيوصل كتنبيه للعميلات اللي فعّلن التنبيهات لما يفتحن الموقع.</p>
+ return flashAdminHtml()+`<div class="card2"><h3>🔔 إرسال عرض جديد للعميلات</h3><p style="font-size:13px;color:var(--muted);margin-bottom:6px">بيظهر في جرس 🔔 الموقع، وبيوصل كتنبيه للعميلات اللي فعّلن التنبيهات لما يفتحن الموقع.</p>
  <label>عنوان العرض</label><input id="at" placeholder="خصم 20% على الفساتين 🎉"><label>التفاصيل</label><textarea id="ax" rows="3"></textarea>
  <div class="row" style="flex-wrap:nowrap"><div style="flex:1"><label>يبدأ (اختياري)</label><input id="ast" type="date"></div><div style="flex:1"><label>ينتهي (اختياري)</label><input id="aen" type="date"></div></div>
  <button class="btn sm" style="margin-top:10px" onclick="addAnn()">نشر العرض</button></div>
@@ -1632,7 +1790,7 @@ function restoreAll(inp){
    save('cats',cats);save('prods',prods);save('coupons',coupons);save('settings',settings);save('orders',orders);save('trash',trash);
    if(cloudAdmin()){
     try{
-     for(const p of prods)await cloudSet('products',p.id,p);
+     for(const p of prods)await cloudSet('products',p.id,normProd(p));
      for(let i=0;i<cats.length;i++)await cloudSet('cats',cats[i].id,{...cats[i],order:i});
      for(const c of coupons)await cloudSet('coupons',c.code,c);
      await cloudSet('settings','main',cloudSettings());
@@ -1663,7 +1821,8 @@ async function boot(){
  // 2) السيرفر (Firebase) فوق القاعدة
  if(fbReady())await Promise.race([cloudLoad(),new Promise(r=>setTimeout(r,8000))]);
  prods=prods.map(normProd);
- applySettings();renderAll();checkAnn(false);
+ flashApply();
+ applySettings();renderAll();checkAnn(false);flashAutoShow();trackVisit();
  const hm=location.hash.match(/^#p(\d+)$/);if(hm&&prodOf(+hm[1]))openPd(+hm[1]);
 }
 setInterval(watchOrder,120000);setTimeout(watchOrder,6000);
