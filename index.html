@@ -259,6 +259,7 @@ table.sg th{background:#fff0f5}
    <a onclick="openTrack()">تتبع طلبك</a>
    <a onclick="openRet()">استبدال واسترجاع</a>
    <a onclick="go('contact')">تواصل معنا</a>
+   <a id="lnkPush" onclick="enablePush();$('links').classList.remove('open')" style="font-weight:700">🔔 تفعيل إشعارات الموبايل</a>
    <a id="lnkApp" onclick="installApp();$('links').classList.remove('open')" style="color:var(--rose);font-weight:800">📲 تنزيل التطبيق</a>
   </nav>
   <div class="icons">
@@ -570,7 +571,13 @@ table.sg th{background:#fff0f5}
  <p style="line-height:1.9;margin-top:6px">أهلاً بيكي في تطبيق <b>Jasmine Style</b>، شكراً إنك نزّلتيه 💕<br>هديتك: <b style="color:var(--rose)">خصم <span id="giftPct">10%</span></b> على طلبك</p>
  <div class="giftcode" id="giftCode"></div>
  <p style="font-size:13px;color:var(--muted)">اكتبي الكود في السلة قبل إتمام الطلب</p>
- <div class="row" style="justify-content:center;gap:8px;margin-top:12px"><button class="btn sm" onclick="copyGift()">📋 نسخ الكود</button><button class="btn sm dark" onclick="$('giftOv').classList.remove('show');go('shop')">تسوقي الآن</button></div>
+ <div class="row" style="justify-content:center;gap:8px;margin-top:12px"><button class="btn sm" onclick="copyGift()">📋 نسخ الكود</button><button class="btn sm dark" onclick="$('giftOv').classList.remove('show');go('shop')">تسوقي الآن</button><button class="btn sm line" onclick="enablePush()">🔔 فعّلي الإشعارات</button></div>
+</div></div>
+<div class="ov" id="pushOv"><div class="box" style="text-align:center">
+ <div style="font-size:50px">🔔</div>
+ <h3 style="font-size:20px">هل تسمحي لـ Jasmine Style بإرسال إشعارات؟</h3>
+ <p style="color:var(--muted);line-height:1.8;margin-top:6px">هتوصلك أحدث العروض والخصومات أول بأول على موبايلك 🌸</p>
+ <div class="row" style="justify-content:center;gap:8px;margin-top:14px"><button class="btn" onclick="pushYes()">حسناً، اسمح</button><button class="btn line" onclick="pushNo()">لاحقاً</button></div>
 </div></div>
 <div class="ov" id="iosOv" onclick="if(event.target===this)this.classList.remove('show')"><div class="box" style="text-align:center">
  <h3>إزاي تنزلي التطبيق؟</h3>
@@ -1544,7 +1551,7 @@ function customersTab(){
 
 function offersTab(){
  const A=settings.announces||[];
- return flashAdminHtml()+`<div class="card2"><h3>🔔 إرسال عرض جديد للعميلات</h3><p style="font-size:13px;color:var(--muted);margin-bottom:6px">بيظهر في جرس 🔔 الموقع، وبيوصل كتنبيه للعميلات اللي فعّلن التنبيهات لما يفتحن الموقع.</p>
+ return `<div class="card2"><h3>📲 إشعارات الموبايل (خارج الموقع)</h3><p style="font-size:13px;color:var(--muted);margin-bottom:6px">الصقي هنا مفتاح الويب (VAPID) من Firebase: Project settings ← Cloud Messaging ← Web Push certificates ← Generate key pair. بعد الحفظ هيظهر للعميلات زر تفعيل الإشعارات. الإرسال بيتم من Firebase Console ← Messaging ← New campaign.</p><input id="vpk" dir="ltr" value="${esc(settings.vapid||'')}" placeholder="BExxxxxxxx..."><button class="btn sm" style="margin-top:8px" onclick="saveVapid()">حفظ</button></div>`+flashAdminHtml()+`<div class="card2"><h3>🔔 إرسال عرض جديد للعميلات</h3><p style="font-size:13px;color:var(--muted);margin-bottom:6px">بيظهر في جرس 🔔 الموقع، وبيوصل كتنبيه للعميلات اللي فعّلن التنبيهات لما يفتحن الموقع.</p>
  <label>عنوان العرض</label><input id="at" placeholder="خصم 20% على الفساتين 🎉"><label>التفاصيل</label><textarea id="ax" rows="3"></textarea>
  <div class="row" style="flex-wrap:nowrap"><div style="flex:1"><label>يبدأ (اختياري)</label><input id="ast" type="date"></div><div style="flex:1"><label>ينتهي (اختياري)</label><input id="aen" type="date"></div></div>
  <button class="btn sm" style="margin-top:10px" onclick="addAnn()">نشر العرض</button></div>
@@ -1936,7 +1943,40 @@ function showGift(c){
 function copyGift(){try{navigator.clipboard.writeText(appCode());toast('تم نسخ الكود ✓')}catch(e){toast(appCode())}}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 window.addEventListener('appinstalled',markInstalled);
-async function appInit(){if(isApp()){markInstalled();try{await Promise.race([window._fresh,new Promise(r=>setTimeout(r,6000))])}catch(e){}setTimeout(giveGift,500)}else if(window._dip)notInstalled();else showAppBar()}
+function askPush(){
+ if(!isApp()||!('Notification' in window)||Notification.permission!=='default'||load('pushAsked',0)||!String(settings.vapid||'').trim())return;
+ $('pushOv').classList.add('show');
+}
+function pushYes(){$('pushOv').classList.remove('show');save('pushAsked',1);enablePush()}
+function pushNo(){$('pushOv').classList.remove('show');save('pushAsked',1)}
+function pushAfterGift(){
+ const g=$('giftOv');
+ if(!g.classList.contains('show')){setTimeout(askPush,600);return}
+ const mo=new MutationObserver(()=>{if(!g.classList.contains('show')){mo.disconnect();setTimeout(askPush,600)}});
+ mo.observe(g,{attributes:true,attributeFilter:['class']});
+}
+async function appInit(){pushInit();if(isApp()){markInstalled();try{await Promise.race([window._fresh,new Promise(r=>setTimeout(r,6000))])}catch(e){}giveGift();pushAfterGift()}else if(window._dip)notInstalled();else showAppBar()}
+
+/* ============ إشعارات الموبايل (FCM) ============ */
+async function enablePush(){
+ const key=String(settings.vapid||'').trim();
+ if(!('Notification' in window)||!('serviceWorker' in navigator)){toast('متصفحك مش بيدعم الإشعارات');return}
+ if(!key){toast('الإشعارات لسه مش مفعّلة من المتجر');return}
+ try{
+  const perm=await Notification.requestPermission();
+  if(perm!=='granted'){toast('لازم توافقي على الإشعارات من المتصفح');return}
+  const reg=await navigator.serviceWorker.register('sw.js');await navigator.serviceWorker.ready;
+  const M=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js');
+  const x=await fbInit();
+  const t=await M.getToken(M.getMessaging(x.db.app),{vapidKey:key,serviceWorkerRegistration:reg});
+  if(!t){toast('تعذر تفعيل الإشعارات');return}
+  await x.F.setDoc(x.F.doc(x.db,'pushTokens',t),{token:t,ts:Date.now(),app:isApp()});
+  save('pushOn',1);const l=$('lnkPush');if(l)l.style.display='none';
+  toast('تم تفعيل إشعارات الموبايل ✓');
+ }catch(e){toast('تعذر تفعيل الإشعارات: '+(e.code||e.message||''))}
+}
+function pushInit(){if(load('pushOn',0)&&'Notification' in window&&Notification.permission==='granted'){const l=$('lnkPush');if(l)l.style.display='none'}}
+function saveVapid(){settings.vapid=$('vpk').value.trim();persistSettings();toast(cloudAdmin()?'تم الحفظ ✓':'اتحفظ على الجهاز ده بس! ادخلي بإيميل Firebase')}
 
 setInterval(watchOrder,120000);setTimeout(watchOrder,6000);
 boot().then(appInit);
