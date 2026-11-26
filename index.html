@@ -259,6 +259,7 @@ table.sg th{background:#fff0f5}
    <a onclick="openTrack()">تتبع طلبك</a>
    <a onclick="openRet()">استبدال واسترجاع</a>
    <a onclick="go('contact')">تواصل معنا</a>
+   <a id="lnkApp" onclick="installApp();$('links').classList.remove('open')" style="color:var(--rose);font-weight:800">📲 تنزيل التطبيق</a>
   </nav>
   <div class="icons">
    <button class="ibtn" onclick="openSearch()" title="بحث">🔍</button>
@@ -1896,17 +1897,20 @@ async function boot(){
 const isApp=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 const isIos=()=>/iphone|ipad|ipod/i.test(navigator.userAgent);
 const appCode=()=>String(settings.appCode||'').trim().toUpperCase();
-window.addEventListener('dipready',showAppBar);
+window.addEventListener('dipready',()=>{if(!appDone())showAppBar()});
+const appDone=()=>isApp()||load('appinst',0);
+function markInstalled(){save('appinst',1);const b=$('appBar');if(b)b.classList.remove('show');const l=$('lnkApp');if(l)l.style.display='none'}
 function showAppBar(){
- if(isApp()||load('appbarX',0)||load('appgift',0))return;
+ if(appDone()){markInstalled();return}
+ try{if(sessionStorage.getItem('appbarX'))return}catch(e){}
  $('appBar').classList.add('show');
 }
-function hideAppBar(){$('appBar').classList.remove('show');save('appbarX',1)}
+function hideAppBar(){$('appBar').classList.remove('show');try{sessionStorage.setItem('appbarX','1')}catch(e){}}
 async function installApp(){
  const d=window._dip;
  if(d){
   window._dip=null;d.prompt();
-  try{const r=await d.userChoice;if(r.outcome==='accepted'){$('appBar').classList.remove('show');toast('تم تثبيت التطبيق ✓ افتحيه من الشاشة الرئيسية وهتلاقي هديتك 🎁')}}catch(e){}
+  try{const r=await d.userChoice;if(r.outcome==='accepted'){markInstalled();toast('تم تثبيت التطبيق ✓ افتحيه من الشاشة الرئيسية وهتلاقي هديتك 🎁')}}catch(e){}
   return;
  }
  if(isIos()){
@@ -1927,7 +1931,8 @@ function showGift(c){
 }
 function copyGift(){try{navigator.clipboard.writeText(appCode());toast('تم نسخ الكود ✓')}catch(e){toast(appCode())}}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-function appInit(){if(isApp())setTimeout(giveGift,900);else showAppBar()}
+window.addEventListener('appinstalled',markInstalled);
+function appInit(){if(isApp()){markInstalled();setTimeout(giveGift,900)}else showAppBar()}
 
 setInterval(watchOrder,120000);setTimeout(watchOrder,6000);
 boot().then(appInit);
