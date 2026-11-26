@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#4a2335">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js">
+<script>window._dip=null;window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window._dip=e;window.dispatchEvent(new Event("dipready"))});</script>
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Jasmine Style">
 <title>Jasmine Style</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 <style>
@@ -110,6 +118,18 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--rose);border-col
 .tl div.done b{background:var(--rose);color:#fff}
 .pill{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;background:#eee}
 .pill.ok{background:#d9f5e3;color:#1a7a43}.pill.wait{background:#fff0c9;color:#8a6200}
+
+/* بانر تنزيل التطبيق */
+.appbar{display:none;position:relative;margin:10px 10px 0;border-radius:18px;padding:14px 16px;background:linear-gradient(135deg,#ffe3ee,#f9b9d2);border:1.5px solid #fff;box-shadow:0 4px 16px rgba(214,99,138,.25);overflow:hidden;align-items:center;gap:14px}
+.appbar.show{display:flex}
+.appbar .ph{width:84px;height:122px;flex-shrink:0;border-radius:16px;background:#2b1a24;border:3px solid #c9a15a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#fff;font-size:11px;font-family:'Playfair Display',serif;direction:ltr}
+.appbar .ph i{width:46px;height:46px;border-radius:12px;background:#ffd6e5;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:26px}
+.appbar .tx{flex:1;text-align:center}
+.appbar .tx b{display:block;font-size:19px;color:var(--dark);line-height:1.4}
+.appbar .tx small{display:block;color:#7a4a5d;margin:2px 0 8px;font-size:13px}
+.appbar .tx .btn{padding:9px 22px;font-size:15px;background:var(--dark)}
+.appbar .x{position:absolute;top:8px;left:8px;width:28px;height:28px;border-radius:50%;background:var(--dark);color:#fff;font-size:14px}
+.giftcode{font-size:26px;font-weight:800;letter-spacing:3px;background:#fff0f5;border:2px dashed var(--rose);color:var(--rose);border-radius:12px;padding:10px;margin:12px 0;direction:ltr;user-select:all}
 /* product page */
 .pd{position:fixed;inset:0;background:#fff;z-index:120;overflow:auto;display:none}
 .pd.show{display:block}
@@ -249,6 +269,12 @@ table.sg th{background:#fff0f5}
   </div>
  </div>
 </header>
+
+<div class="appbar" id="appBar">
+ <button class="x" onclick="hideAppBar()" aria-label="إغلاق">✕</button>
+ <div class="ph"><i>🌸</i>Jasmine Style</div>
+ <div class="tx"><b>نزّلي تطبيق Jasmine Style على موبايلك</b><small>🎁 وخدي كود خصم 10% هدية</small><button class="btn" onclick="installApp()">⬇️ تحميل التطبيق الآن</button></div>
+</div>
 
 <section class="hero">
  <h1>Jasmine <span>Style</span></h1>
@@ -536,6 +562,17 @@ table.sg th{background:#fff0f5}
  </div>
 </div>
 <div class="ov" id="imgOv" style="z-index:370" onclick="this.classList.remove('show')"><img id="bigImg" style="max-width:100%;max-height:90vh;border-radius:10px"></div>
+<div class="ov" id="giftOv" onclick="if(event.target===this)this.classList.remove('show')"><div class="box" style="text-align:center">
+ <div style="font-size:54px">🎉</div><h3>مبروك! حصلتي على كود خصم 10%</h3>
+ <p style="color:var(--muted)">استخدميه في السلة عند إتمام أول طلب</p>
+ <div class="giftcode" id="giftCode"></div>
+ <div class="row" style="justify-content:center;gap:8px"><button class="btn sm" onclick="copyGift()">📋 نسخ الكود</button><button class="btn sm dark" onclick="$('giftOv').classList.remove('show');go('shop')">تسوقي الآن</button></div>
+</div></div>
+<div class="ov" id="iosOv" onclick="if(event.target===this)this.classList.remove('show')"><div class="box" style="text-align:center">
+ <h3>إزاي تنزلي التطبيق؟</h3>
+ <p style="line-height:2" id="iosTxt"></p>
+ <button class="btn sm dark" style="margin-top:12px" onclick="$('iosOv').classList.remove('show')">تمام</button>
+</div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1290,14 +1327,19 @@ async function cloudLoad(){
  try{
   const x=await fbInit(),F=x.F;
   const get=async c=>(await F.getDocs(F.collection(x.db,c))).docs.map(d=>d.data());
-  const [P,C,R,S]=await Promise.all([get('products'),get('cats'),get('reviews'),F.getDoc(F.doc(x.db,'settings','main'))]);
+  const [P,C,S]=await Promise.all([get('products'),get('cats'),F.getDoc(F.doc(x.db,'settings','main'))]);
   if(P.length)prods=P.map(normProd);
   if(C.length)cats=C.sort((a,b)=>(a.order||0)-(b.order||0));
-  reviews=R;
   if(S.exists())settings={...settings,...S.data()};
   cloudOK=true;
+  idbSet('cache',{prods,cats,settings:cloudSettings()});
+  get('reviews').then(R=>{reviews=R}).catch(()=>{});
  }catch(e){cloudOK=false;console.warn('cloud',e)}
 }
+/* كاش سريع على الجهاز */
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open('jsw',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function idbGet(k){try{const d=await idb();return await new Promise(res=>{const q=d.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>res(null)})}catch(e){return null}}
+async function idbSet(k,v){try{const d=await idb();d.transaction('kv','readwrite').objectStore('kv').put(v,k)}catch(e){}}
 async function loadAdminOrders(){
  if(cloudAdmin()){
   try{
@@ -1543,6 +1585,7 @@ function setTab(){
  <label>رابط صفحة فيسبوك (سيبيه فاضي لإخفائه)</label><input id="sfb" value="${esc(settings.fb==null?DEF_FB:settings.fb)}" dir="ltr">
  <label>الشريط المتحرك أعلى الموقع (سيبيه فاضي لإخفائه)</label><textarea id="stk" rows="2">${esc(tickerTxt())}</textarea>
  <label>الكلام اللي بيظهر في أول الصفحة (تحت اسم المتجر)</label><textarea id="sh" rows="3">${esc(heroTxtV())}</textarea>
+ <label>🎁 كود خصم تنزيل التطبيق (اللي بيظهر للعميلة بعد التنزيل — لازم تعملي نفس الكود في تبويب الكوبونات خصم 10%)</label><input id="sapc" dir="ltr" value="${esc(settings.appCode||'')}" placeholder="مثال: APP10">
  <label>شحن مجاني للطلبات من (ج.م) — 0 لإلغائه</label><input id="sfs" type="number" min="0" value="${+settings.freeShipMin||0}">
  <label>تنبيه المخزون عند وصول الكمية إلى</label><input id="sls" type="number" min="0" value="${lowLimit()}">
  ${cloudAdmin()&&!isStaff()?`<label style="display:flex;gap:8px;align-items:center;margin-top:12px"><input type="checkbox" id="snl" style="width:auto" ${settings.noLocal?'checked':''}>🔒 تعطيل الدخول بالرقم الثابت (فعّليه بعد ما تتأكدي إن دخولك بالإيميل شغال)</label>`:''}
@@ -1589,7 +1632,7 @@ function setTab(){
 function saveSet(){
  settings.wa=$('swa').value.trim();settings.vf=$('svf').value.trim();settings.fb=$('sfb').value.trim();
  settings.ticker=$('stk').value.trim();settings.hero=$('sh').value.trim();
- settings.freeShipMin=+$('sfs').value||0;settings.lowStock=+$('sls').value;
+ settings.appCode=$('sapc').value.trim().toUpperCase();settings.freeShipMin=+$('sfs').value||0;settings.lowStock=+$('sls').value;
  if($('snl'))settings.noLocal=$('snl').checked;
  persistSettings();toast('تم الحفظ ✓');
 }
@@ -1806,8 +1849,11 @@ function restoreAll(inp){
 
 /* ============ التشغيل ============ */
 async function boot(){
- // 1) قاعدة أولية: data.json (للنسخة القديمة)
- if(!hasLocal('cats')||!hasLocal('prods')||!hasLocal('settings')){
+ if(fbReady())fbInit().catch(()=>{});
+ const cache=await Promise.race([idbGet('cache'),new Promise(r=>setTimeout(()=>r(null),1500))]);
+ if(cache&&cache.prods&&cache.prods.length){
+  prods=cache.prods;if(cache.cats&&cache.cats.length)cats=cache.cats;if(cache.settings)settings={...settings,...cache.settings};
+ }else if(!hasLocal('cats')||!hasLocal('prods')||!hasLocal('settings')){
   try{
    const r=await fetch('data.json?v='+Date.now(),{cache:'no-store'});
    if(r.ok){const d=await r.json();
@@ -1818,15 +1864,56 @@ async function boot(){
    }
   }catch(e){}
  }
- // 2) السيرفر (Firebase) فوق القاعدة
- if(fbReady())await Promise.race([cloudLoad(),new Promise(r=>setTimeout(r,8000))]);
- prods=prods.map(normProd);
- flashApply();
- applySettings();renderAll();checkAnn(false);flashAutoShow();trackVisit();
+ const paint=()=>{prods=prods.map(normProd);flashApply();applySettings();renderAll()};
+ const fresh=fbReady()?cloudLoad():Promise.resolve();
+ if(cache){
+  paint();checkAnn(false);flashAutoShow();trackVisit();
+  fresh.then(()=>{if(cloudOK)paint()});
+ }else{
+  await Promise.race([fresh,new Promise(r=>setTimeout(r,8000))]);
+  paint();checkAnn(false);flashAutoShow();trackVisit();
+ }
  const hm=location.hash.match(/^#p(\d+)$/);if(hm&&prodOf(+hm[1]))openPd(+hm[1]);
 }
+
+/* ============ تنزيل التطبيق + هدية الكود ============ */
+const isApp=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const isIos=()=>/iphone|ipad|ipod/i.test(navigator.userAgent);
+const appCode=()=>String(settings.appCode||'').trim().toUpperCase();
+window.addEventListener('dipready',showAppBar);
+function showAppBar(){
+ if(isApp()||load('appbarX',0)||load('appgift',0))return;
+ $('appBar').classList.add('show');
+}
+function hideAppBar(){$('appBar').classList.remove('show');save('appbarX',1)}
+async function installApp(){
+ const d=window._dip;
+ if(d){
+  window._dip=null;d.prompt();
+  try{const r=await d.userChoice;if(r.outcome==='accepted'){$('appBar').classList.remove('show');setTimeout(()=>giveGift(),600)}}catch(e){}
+  return;
+ }
+ if(isIos()){
+  $('iosTxt').innerHTML='دوسي على زر المشاركة ⬆️ ثم «إضافة إلى الشاشة الرئيسية»';
+  $('iosOv').classList.add('show');return;
+ }
+ $('iosTxt').innerHTML='افتحي الموقع من متصفح <b>كروم</b> وجربي تاني، أو من قائمة المتصفح (⋮) اختاري «تثبيت التطبيق»';
+ $('iosOv').classList.add('show');
+}
+function giveGift(){
+ if(load('appgift',0))return;
+ const c=appCode();if(!c)return;
+ save('appgift',1);$('appBar').classList.remove('show');
+ $('giftCode').textContent=c;$('giftOv').classList.add('show');
+ try{navigator.clipboard.writeText(c)}catch(e){}
+}
+function copyGift(){try{navigator.clipboard.writeText(appCode());toast('تم نسخ الكود ✓')}catch(e){toast(appCode())}}
+window.addEventListener('appinstalled',()=>setTimeout(giveGift,600));
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+function appInit(){if(isApp())giveGift();else showAppBar()}
+
 setInterval(watchOrder,120000);setTimeout(watchOrder,6000);
-boot();
+boot().then(appInit);
 </script>
 </body>
 </html>
