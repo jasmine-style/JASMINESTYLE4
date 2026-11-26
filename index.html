@@ -1647,7 +1647,7 @@ function saveSet(){
 }
 function saveApp(){
  settings.appCode=$('sapc').value.trim().toUpperCase();settings.appPct=+$('sapp').value||10;
- persistSettings();toast('تم حفظ هدية التطبيق ✓');
+ persistSettings();toast(cloudAdmin()?'تم حفظ هدية التطبيق ✓':'اتحفظ على الجهاز ده بس! سجّلي دخول بإيميل Firebase وحفظي تاني عشان يوصل للعميلات');
 }
 function previewGift(){
  const c=String($('sapc').value||'').trim().toUpperCase();if(!c){toast('اكتبي الكود الأول');return}
@@ -1882,7 +1882,7 @@ async function boot(){
   }catch(e){}
  }
  const paint=()=>{prods=prods.map(normProd);flashApply();applySettings();renderAll()};
- const fresh=fbReady()?cloudLoad():Promise.resolve();
+ const fresh=fbReady()?cloudLoad():Promise.resolve();window._fresh=fresh;
  if(cache){
   paint();checkAnn(false);flashAutoShow();trackVisit();
   fresh.then(()=>{if(cloudOK)paint()});
@@ -1921,9 +1921,9 @@ async function installApp(){
  $('iosOv').classList.add('show');
 }
 function giveGift(){
- if(load('appgift',0))return;
+ if(load('appgift2',0))return;
  const c=appCode();if(!c)return;
- save('appgift',1);$('appBar').classList.remove('show');showGift(c);
+ save('appgift2',1);$('appBar').classList.remove('show');showGift(c);
 }
 function showGift(c){
  $('giftCode').textContent=c;$('giftPct').textContent=(+settings.appPct||10)+'%';$('giftOv').classList.add('show');
@@ -1932,7 +1932,7 @@ function showGift(c){
 function copyGift(){try{navigator.clipboard.writeText(appCode());toast('تم نسخ الكود ✓')}catch(e){toast(appCode())}}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 window.addEventListener('appinstalled',markInstalled);
-function appInit(){if(isApp()){markInstalled();setTimeout(giveGift,900)}else showAppBar()}
+async function appInit(){if(isApp()){markInstalled();try{await Promise.race([window._fresh,new Promise(r=>setTimeout(r,6000))])}catch(e){}setTimeout(giveGift,500)}else showAppBar()}
 
 setInterval(watchOrder,120000);setTimeout(watchOrder,6000);
 boot().then(appInit);
