@@ -563,10 +563,12 @@ table.sg th{background:#fff0f5}
 </div>
 <div class="ov" id="imgOv" style="z-index:370" onclick="this.classList.remove('show')"><img id="bigImg" style="max-width:100%;max-height:90vh;border-radius:10px"></div>
 <div class="ov" id="giftOv" onclick="if(event.target===this)this.classList.remove('show')"><div class="box" style="text-align:center">
- <div style="font-size:54px">🎉</div><h3>مبروك! حصلتي على كود خصم 10%</h3>
- <p style="color:var(--muted)">استخدميه في السلة عند إتمام أول طلب</p>
+ <div style="font-size:56px">🎉</div>
+ <h3 style="font-size:22px">مبروك! 🌸</h3>
+ <p style="line-height:1.9;margin-top:6px">أهلاً بيكي في تطبيق <b>Jasmine Style</b>، شكراً إنك نزّلتيه 💕<br>هديتك: <b style="color:var(--rose)">خصم <span id="giftPct">10%</span></b> على طلبك</p>
  <div class="giftcode" id="giftCode"></div>
- <div class="row" style="justify-content:center;gap:8px"><button class="btn sm" onclick="copyGift()">📋 نسخ الكود</button><button class="btn sm dark" onclick="$('giftOv').classList.remove('show');go('shop')">تسوقي الآن</button></div>
+ <p style="font-size:13px;color:var(--muted)">اكتبي الكود في السلة قبل إتمام الطلب</p>
+ <div class="row" style="justify-content:center;gap:8px;margin-top:12px"><button class="btn sm" onclick="copyGift()">📋 نسخ الكود</button><button class="btn sm dark" onclick="$('giftOv').classList.remove('show');go('shop')">تسوقي الآن</button></div>
 </div></div>
 <div class="ov" id="iosOv" onclick="if(event.target===this)this.classList.remove('show')"><div class="box" style="text-align:center">
  <h3>إزاي تنزلي التطبيق؟</h3>
@@ -1585,11 +1587,17 @@ function setTab(){
  <label>رابط صفحة فيسبوك (سيبيه فاضي لإخفائه)</label><input id="sfb" value="${esc(settings.fb==null?DEF_FB:settings.fb)}" dir="ltr">
  <label>الشريط المتحرك أعلى الموقع (سيبيه فاضي لإخفائه)</label><textarea id="stk" rows="2">${esc(tickerTxt())}</textarea>
  <label>الكلام اللي بيظهر في أول الصفحة (تحت اسم المتجر)</label><textarea id="sh" rows="3">${esc(heroTxtV())}</textarea>
- <label>🎁 كود خصم تنزيل التطبيق (اللي بيظهر للعميلة بعد التنزيل — لازم تعملي نفس الكود في تبويب الكوبونات خصم 10%)</label><input id="sapc" dir="ltr" value="${esc(settings.appCode||'')}" placeholder="مثال: APP10">
  <label>شحن مجاني للطلبات من (ج.م) — 0 لإلغائه</label><input id="sfs" type="number" min="0" value="${+settings.freeShipMin||0}">
  <label>تنبيه المخزون عند وصول الكمية إلى</label><input id="sls" type="number" min="0" value="${lowLimit()}">
  ${cloudAdmin()&&!isStaff()?`<label style="display:flex;gap:8px;align-items:center;margin-top:12px"><input type="checkbox" id="snl" style="width:auto" ${settings.noLocal?'checked':''}>🔒 تعطيل الدخول بالرقم الثابت (فعّليه بعد ما تتأكدي إن دخولك بالإيميل شغال)</label>`:''}
  <button class="btn" style="margin-top:14px" onclick="saveSet()">حفظ</button></div>
+
+ <div class="box" style="max-width:520px;margin:0 0 14px"><h3>🎁 هدية تنزيل التطبيق</h3>
+ <p style="font-size:13px;color:var(--muted);margin-bottom:6px">الرسالة دي بتظهر للعميلة أول ما تفتح التطبيق. لازم تعملي نفس الكود في تبويب الكوبونات بنفس نسبة الخصم.</p>
+ <label>كود الخصم اللي هيظهر للعميلة (سيبيه فاضي لإيقاف الرسالة)</label><input id="sapc" dir="ltr" value="${esc(settings.appCode||'')}" placeholder="مثال: APP10">
+ <label>نسبة الخصم اللي هتتكتب في الرسالة (%)</label><input id="sapp" type="number" min="1" max="100" value="${+settings.appPct||10}">
+ <button class="btn sm" style="margin-top:12px" onclick="saveApp()">حفظ</button>
+ <button class="btn sm dark" style="margin-top:12px" onclick="previewGift()">👁️ معاينة الرسالة</button></div>
 
  ${cloudAdmin()&&!isStaff()?`<div class="box" style="max-width:520px;margin:0 0 14px"><h3>👥 حسابات الموظفين</h3>
  <p style="font-size:13px;color:var(--muted);margin-bottom:6px">اعملي للموظف حساب في Firebase Authentication، واكتبي إيميله هنا (إيميل في كل سطر). الموظف بيشوف الطلبات والاستبدال فقط.</p>
@@ -1632,9 +1640,17 @@ function setTab(){
 function saveSet(){
  settings.wa=$('swa').value.trim();settings.vf=$('svf').value.trim();settings.fb=$('sfb').value.trim();
  settings.ticker=$('stk').value.trim();settings.hero=$('sh').value.trim();
- settings.appCode=$('sapc').value.trim().toUpperCase();settings.freeShipMin=+$('sfs').value||0;settings.lowStock=+$('sls').value;
+ settings.freeShipMin=+$('sfs').value||0;settings.lowStock=+$('sls').value;
  if($('snl'))settings.noLocal=$('snl').checked;
  persistSettings();toast('تم الحفظ ✓');
+}
+function saveApp(){
+ settings.appCode=$('sapc').value.trim().toUpperCase();settings.appPct=+$('sapp').value||10;
+ persistSettings();toast('تم حفظ هدية التطبيق ✓');
+}
+function previewGift(){
+ const c=String($('sapc').value||'').trim().toUpperCase();if(!c){toast('اكتبي الكود الأول');return}
+ settings.appCode=c;settings.appPct=+$('sapp').value||10;showGift(c);
 }
 function saveShip(){settings.ship={};GOVS.forEach((g,i)=>settings.ship[g]=+$('sh'+i).value||0);persistSettings();toast('تم حفظ أسعار الشحن ✓')}
 function addArea(){
@@ -1890,7 +1906,7 @@ async function installApp(){
  const d=window._dip;
  if(d){
   window._dip=null;d.prompt();
-  try{const r=await d.userChoice;if(r.outcome==='accepted'){$('appBar').classList.remove('show');setTimeout(()=>giveGift(),600)}}catch(e){}
+  try{const r=await d.userChoice;if(r.outcome==='accepted'){$('appBar').classList.remove('show');toast('تم تثبيت التطبيق ✓ افتحيه من الشاشة الرئيسية وهتلاقي هديتك 🎁')}}catch(e){}
   return;
  }
  if(isIos()){
@@ -1903,14 +1919,15 @@ async function installApp(){
 function giveGift(){
  if(load('appgift',0))return;
  const c=appCode();if(!c)return;
- save('appgift',1);$('appBar').classList.remove('show');
- $('giftCode').textContent=c;$('giftOv').classList.add('show');
+ save('appgift',1);$('appBar').classList.remove('show');showGift(c);
+}
+function showGift(c){
+ $('giftCode').textContent=c;$('giftPct').textContent=(+settings.appPct||10)+'%';$('giftOv').classList.add('show');
  try{navigator.clipboard.writeText(c)}catch(e){}
 }
 function copyGift(){try{navigator.clipboard.writeText(appCode());toast('تم نسخ الكود ✓')}catch(e){toast(appCode())}}
-window.addEventListener('appinstalled',()=>setTimeout(giveGift,600));
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-function appInit(){if(isApp())giveGift();else showAppBar()}
+function appInit(){if(isApp())setTimeout(giveGift,900);else showAppBar()}
 
 setInterval(watchOrder,120000);setTimeout(watchOrder,6000);
 boot().then(appInit);
