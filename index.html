@@ -1882,11 +1882,13 @@ function restoreAll(inp){
 /* ============ التشغيل ============ */
 const SKEL=n=>Array(n).fill('<div class="sk-card"><div class="sk sk-img"></div><div class="sk sk-t"></div><div class="sk sk-p"></div></div>').join('');
 function showSkel(){
+ const he=$('heroTxt');if(he)he.innerHTML='<span class="sk" style="display:block;height:16px;width:90%;margin:0 auto 10px"></span><span class="sk" style="display:block;height:16px;width:65%;margin:0 auto"></span>';
  const ce=$('cats');if(ce)ce.innerHTML=Array(5).fill('<div class="sk" style="height:84px"></div>').join('');
  const fe=$('filters');if(fe)fe.innerHTML=Array(4).fill('<span class="sk" style="display:inline-block;width:70px;height:32px;border-radius:30px;margin-left:8px"></span>').join('');
  ['grid','featGrid','newGrid','bestGrid'].forEach(id=>{const e=$(id);if(e)e.innerHTML=SKEL(id==='grid'?8:4)});
 }
 function showNetErr(){
+ const he=$('heroTxt');if(he)he.textContent='';
  const ce=$('cats');if(ce)ce.innerHTML='';const fe=$('filters');if(fe)fe.innerHTML='';
  const e=$('grid');
  if(e)e.innerHTML='<div class="empty" style="grid-column:1/-1">النت ضعيف 📶<br>مش قادرين نحمّل المنتجات دلوقتي<br><button class="btn" style="margin-top:12px" onclick="location.reload()">حاولي تاني</button></div>';
