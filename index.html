@@ -388,6 +388,7 @@ table.sg th{background:#fff0f5}
   <button data-t="prods" onclick="tab('prods')">المنتجات</button>
   <button data-t="cats" onclick="tab('cats')">الأقسام</button>
   <button data-t="coupons" onclick="tab('coupons')">الكوبونات</button>
+  <button data-t="appgift" onclick="tab('appgift')">🎁 هدية التطبيق</button>
   <button data-t="reviews" onclick="tab('reviews')">التقييمات</button>
   <button data-t="customers" onclick="tab('customers')">العميلات</button>
   <button data-t="offers" onclick="tab('offers')">العروض والإشعارات</button>
@@ -1382,7 +1383,7 @@ async function tab(t){
  }
  if(t==='visits'&&cloudAdmin())await loadVisits();
  const banner=adminMode==='local'?'<div class="warn">⚠️ أنتِ داخلة بالوضع المحلي: التعديلات بتتحفظ على الجهاز ده بس ومش بتتحفظ على السيرفر. للحفظ على السيرفر اخرجي وادخلي بإيميل وكلمة سر Firebase.</div>':'';
- const R={visits:visitsTab,dash,orders:ordersTab,prods:prodsTab,cats:catsTab,coupons:couponsTab,reviews:reviewsTab,customers:customersTab,offers:offersTab,reports:reportsTab,set:setTab,returns:returnsTab,alerts:alertsTab,log:logTab,stocklog:stockTab,trash:trashTab};
+ const R={visits:visitsTab,dash,orders:ordersTab,prods:prodsTab,cats:catsTab,coupons:couponsTab,appgift:appGiftTab,reviews:reviewsTab,customers:customersTab,offers:offersTab,reports:reportsTab,set:setTab,returns:returnsTab,alerts:alertsTab,log:logTab,stocklog:stockTab,trash:trashTab};
  P.innerHTML=banner+(R[t]?R[t]():'');
 }
 const okOrders=()=>orders.filter(o=>o.status!=='ملغي');
@@ -1593,13 +1594,6 @@ function setTab(){
  ${cloudAdmin()&&!isStaff()?`<label style="display:flex;gap:8px;align-items:center;margin-top:12px"><input type="checkbox" id="snl" style="width:auto" ${settings.noLocal?'checked':''}>🔒 تعطيل الدخول بالرقم الثابت (فعّليه بعد ما تتأكدي إن دخولك بالإيميل شغال)</label>`:''}
  <button class="btn" style="margin-top:14px" onclick="saveSet()">حفظ</button></div>
 
- <div class="box" style="max-width:520px;margin:0 0 14px"><h3>🎁 هدية تنزيل التطبيق</h3>
- <p style="font-size:13px;color:var(--muted);margin-bottom:6px">الرسالة دي بتظهر للعميلة أول ما تفتح التطبيق. لازم تعملي نفس الكود في تبويب الكوبونات بنفس نسبة الخصم.</p>
- <label>كود الخصم اللي هيظهر للعميلة (سيبيه فاضي لإيقاف الرسالة)</label><input id="sapc" dir="ltr" value="${esc(settings.appCode||'')}" placeholder="مثال: APP10">
- <label>نسبة الخصم اللي هتتكتب في الرسالة (%)</label><input id="sapp" type="number" min="1" max="100" value="${+settings.appPct||10}">
- <button class="btn sm" style="margin-top:12px" onclick="saveApp()">حفظ</button>
- <button class="btn sm dark" style="margin-top:12px" onclick="previewGift()">👁️ معاينة الرسالة</button></div>
-
  ${cloudAdmin()&&!isStaff()?`<div class="box" style="max-width:520px;margin:0 0 14px"><h3>👥 حسابات الموظفين</h3>
  <p style="font-size:13px;color:var(--muted);margin-bottom:6px">اعملي للموظف حساب في Firebase Authentication، واكتبي إيميله هنا (إيميل في كل سطر). الموظف بيشوف الطلبات والاستبدال فقط.</p>
  <textarea id="sstf" rows="3" dir="ltr">${esc(staffEmails.join('\n'))}</textarea><button class="btn sm" style="margin-top:8px" onclick="saveStaff()">حفظ الموظفين</button></div>`:''}
@@ -1644,6 +1638,14 @@ function saveSet(){
  settings.freeShipMin=+$('sfs').value||0;settings.lowStock=+$('sls').value;
  if($('snl'))settings.noLocal=$('snl').checked;
  persistSettings();toast('تم الحفظ ✓');
+}
+function appGiftTab(){
+ return `<div class="box" style="max-width:520px;margin:0 0 14px"><h3>🎁 هدية تنزيل التطبيق</h3>
+ <p style="font-size:13px;color:var(--muted);margin-bottom:6px">الرسالة دي بتظهر للعميلة أول ما تفتح التطبيق. لازم تعملي نفس الكود في تبويب الكوبونات بنفس نسبة الخصم.</p>
+ <label>كود الخصم اللي هيظهر للعميلة (سيبيه فاضي لإيقاف الرسالة)</label><input id="sapc" dir="ltr" value="${esc(settings.appCode||'')}" placeholder="مثال: APP10">
+ <label>نسبة الخصم اللي هتتكتب في الرسالة (%)</label><input id="sapp" type="number" min="1" max="100" value="${+settings.appPct||10}">
+ <button class="btn sm" style="margin-top:12px" onclick="saveApp()">حفظ</button>
+ <button class="btn sm dark" style="margin-top:12px" onclick="previewGift()">👁️ معاينة الرسالة</button></div>`;
 }
 function saveApp(){
  settings.appCode=$('sapc').value.trim().toUpperCase();settings.appPct=+$('sapp').value||10;
@@ -1897,9 +1899,10 @@ async function boot(){
 const isApp=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 const isIos=()=>/iphone|ipad|ipod/i.test(navigator.userAgent);
 const appCode=()=>String(settings.appCode||'').trim().toUpperCase();
-window.addEventListener('dipready',()=>{if(!appDone())showAppBar()});
+function notInstalled(){if(isApp())return;try{localStorage.removeItem('jsw_appinst')}catch(e){}showAppBar()}
+window.addEventListener('dipready',notInstalled);
 const appDone=()=>isApp()||load('appinst',0);
-function markInstalled(){save('appinst',1);const b=$('appBar');if(b)b.classList.remove('show');const l=$('lnkApp');if(l)l.style.display='none'}
+function markInstalled(){save('appinst',1);const b=$('appBar');if(b)b.classList.remove('show');}
 function showAppBar(){
  if(appDone()){markInstalled();return}
  try{if(sessionStorage.getItem('appbarX'))return}catch(e){}
@@ -1913,6 +1916,7 @@ async function installApp(){
   try{const r=await d.userChoice;if(r.outcome==='accepted'){markInstalled();toast('تم تثبيت التطبيق ✓ افتحيه من الشاشة الرئيسية وهتلاقي هديتك 🎁')}}catch(e){}
   return;
  }
+ if(load('appinst',0)&&!isIos()){toast('التطبيق متثبت عندك بالفعل ✓');return}
  if(isIos()){
   $('iosTxt').innerHTML='دوسي على زر المشاركة ⬆️ ثم «إضافة إلى الشاشة الرئيسية»';
   $('iosOv').classList.add('show');return;
@@ -1932,7 +1936,7 @@ function showGift(c){
 function copyGift(){try{navigator.clipboard.writeText(appCode());toast('تم نسخ الكود ✓')}catch(e){toast(appCode())}}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 window.addEventListener('appinstalled',markInstalled);
-async function appInit(){if(isApp()){markInstalled();try{await Promise.race([window._fresh,new Promise(r=>setTimeout(r,6000))])}catch(e){}setTimeout(giveGift,500)}else showAppBar()}
+async function appInit(){if(isApp()){markInstalled();try{await Promise.race([window._fresh,new Promise(r=>setTimeout(r,6000))])}catch(e){}setTimeout(giveGift,500)}else if(window._dip)notInstalled();else showAppBar()}
 
 setInterval(watchOrder,120000);setTimeout(watchOrder,6000);
 boot().then(appInit);
