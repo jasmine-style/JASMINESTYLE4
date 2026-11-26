@@ -71,6 +71,12 @@ h2.t{text-align:center;font-size:26px;margin-bottom:6px}
 .price{color:var(--rose);font-weight:800}
 .price s{color:var(--muted);font-weight:400;font-size:13px;margin-right:6px}
 .pinfo .btn{margin-top:auto;width:100%}
+.sk{background:linear-gradient(90deg,#e6e6e6 25%,#f3f3f3 50%,#e6e6e6 75%);background-size:200% 100%;animation:skm 1.2s infinite linear;border-radius:10px}
+.sk-card{background:#fff;border-radius:14px;padding:10px}
+.sk-img{aspect-ratio:1/1;width:100%;margin-bottom:10px}
+.sk-t{height:14px;width:75%;margin-bottom:8px}
+.sk-p{height:14px;width:40%}
+@keyframes skm{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .empty{text-align:center;color:var(--muted);padding:40px}
 .feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;text-align:center}
 .feat div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px}
@@ -1339,7 +1345,7 @@ async function cloudLoad(){
   const x=await fbInit(),F=x.F;
   const get=async c=>(await F.getDocs(F.collection(x.db,c))).docs.map(d=>d.data());
   const [P,C,S]=await Promise.all([get('products'),get('cats'),F.getDoc(F.doc(x.db,'settings','main'))]);
-  if(P.length)prods=P.map(normProd);
+  prods=P.map(normProd);
   if(C.length)cats=C.sort((a,b)=>(a.order||0)-(b.order||0));
   if(S.exists())settings={...settings,...S.data()};
   cloudOK=true;
@@ -1874,29 +1880,32 @@ function restoreAll(inp){
 }
 
 /* ============ التشغيل ============ */
+const SKEL=n=>Array(n).fill('<div class="sk-card"><div class="sk sk-img"></div><div class="sk sk-t"></div><div class="sk sk-p"></div></div>').join('');
+function showSkel(){
+ ['grid','featGrid','newGrid','bestGrid'].forEach(id=>{const e=$(id);if(e)e.innerHTML=SKEL(id==='grid'?8:4)});
+}
+function showNetErr(){
+ const e=$('grid');
+ if(e)e.innerHTML='<div class="empty" style="grid-column:1/-1">النت ضعيف 📶<br>مش قادرين نحمّل المنتجات دلوقتي<br><button class="btn" style="margin-top:12px" onclick="location.reload()">حاولي تاني</button></div>';
+}
 async function boot(){
  if(fbReady())fbInit().catch(()=>{});
- const cache=await Promise.race([idbGet('cache'),new Promise(r=>setTimeout(()=>r(null),1500))]);
- if(cache&&cache.prods&&cache.prods.length){
-  prods=cache.prods;if(cache.cats&&cache.cats.length)cats=cache.cats;if(cache.settings)settings={...settings,...cache.settings};
- }else if(!hasLocal('cats')||!hasLocal('prods')||!hasLocal('settings')){
-  try{
-   const r=await fetch('data.json?v='+Date.now(),{cache:'no-store'});
-   if(r.ok){const d=await r.json();
-    if(!hasLocal('cats')&&d.cats)cats=d.cats;
-    if(!hasLocal('prods')&&d.prods)prods=d.prods.map(normProd);
-    if(!hasLocal('coupons')&&d.coupons)coupons=d.coupons;
-    if(!hasLocal('settings')&&d.settings)settings={...settings,...d.settings};
-   }
-  }catch(e){}
- }
- const paint=()=>{prods=prods.map(normProd);flashApply();applySettings();renderAll()};
- const fresh=fbReady()?cloudLoad():Promise.resolve();window._fresh=fresh;
- if(cache){
-  paint();checkAnn(false);flashAutoShow();trackVisit();
-  fresh.then(()=>{if(cloudOK)paint()});
+ if(fbReady()){
+  /* المنتجات بتيجي من السيرفر بس — مفيش عرض لمنتجات قديمة */
+  const cache=await Promise.race([idbGet('cache'),new Promise(r=>setTimeout(()=>r(null),1500))]);
+  if(cache){if(cache.cats&&cache.cats.length)cats=cache.cats;if(cache.settings)settings={...settings,...cache.settings}}
+  prods=[];
+  applySettings();renderCats();showSkel();
+  const fresh=cloudLoad();window._fresh=fresh;
+  await Promise.race([fresh,new Promise(r=>setTimeout(r,15000))]);
+  if(cloudOK){
+   prods=prods.map(normProd);flashApply();applySettings();renderAll();checkAnn(false);flashAutoShow();trackVisit();
+  }else{
+   showNetErr();
+  }
  }else{
-  await Promise.race([fresh,new Promise(r=>setTimeout(r,8000))]);
+  const paint=()=>{prods=prods.map(normProd);flashApply();applySettings();renderAll()};
+  window._fresh=Promise.resolve();
   paint();checkAnn(false);flashAutoShow();trackVisit();
  }
  const hm=location.hash.match(/^#p(\d+)$/);if(hm&&prodOf(+hm[1]))openPd(+hm[1]);
