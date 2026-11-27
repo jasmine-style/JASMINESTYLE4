@@ -2005,6 +2005,44 @@ async function boot(){
   paint();extras();openHash();
  }
 }
+/* ============ تحديث تلقائي للمنتجات لما التطبيق يرجع للواجهة ============ */
+let _lastRef=Date.now(),_refBusy=false;
+async function refreshData(){
+ if(!fbReady()||document.hidden||_refBusy||adminMode)return;
+ if(Date.now()-_lastRef<20000)return;
+ _refBusy=true;_lastRef=Date.now();
+ try{
+  const ch=await cloudLoad(null);
+  if(ch&&cloudOK){prods=prods.map(normProd);flashApply();applySettings();renderAll()}
+ }catch(e){}
+ _refBusy=false;
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshData()});
+window.addEventListener('focus',refreshData);
+window.addEventListener('pageshow',e=>{if(e.persisted)refreshData()});
+setInterval(refreshData,120000);
+/* ============ تحديث لحظي: أي منتج جديد يظهر فوراً والتطبيق مفتوح ============ */
+let _live=false,_liveT=null;
+async function startLive(){
+ if(_live||!fbReady())return;_live=true;
+ try{
+  const x=await fbInit(),F=x.F;
+  F.onSnapshot(F.collection(x.db,'products'),snap=>{
+   if(adminMode)return;
+   clearTimeout(_liveT);
+   _liveT=setTimeout(()=>{
+    try{
+     const np=snap.docs.map(d=>normProd(d.data()));
+     const js=JSON.stringify(np);
+     if(js===window._snap)return;
+     window._snap=js;prods=np;
+     idbSet('cache',{prods:JSON.parse(js),cats:JSON.parse(JSON.stringify(cats)),settings:cloudSettings()});
+     flashApply();renderAll();
+    }catch(e){console.warn(e)}
+   },600);
+  },e=>{_live=false;console.warn('live',e)});
+ }catch(e){_live=false}
+}
 /* ============ تنزيل التطبيق + هدية الكود ============ */
 const isApp=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 const isIos=()=>/iphone|ipad|ipod/i.test(navigator.userAgent);
@@ -2082,7 +2120,7 @@ function pushInit(){if(load('pushOn',0)&&'Notification' in window&&Notification.
 function saveVapid(){settings.vapid=$('vpk').value.trim();persistSettings();toast(cloudAdmin()?'تم الحفظ ✓':'اتحفظ على الجهاز ده بس! ادخلي بإيميل Firebase')}
 
 setInterval(watchOrder,120000);setTimeout(watchOrder,6000);
-boot().then(appInit);
+boot().then(appInit);setTimeout(startLive,6000);
 </script>
 </body>
 </html>
