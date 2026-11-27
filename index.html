@@ -116,6 +116,12 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--rose);border-col
 .pm label{flex:1;margin:0;border:1.5px solid var(--line);border-radius:10px;padding:10px;text-align:center;cursor:pointer;font-size:14px}
 .pm input{width:auto;margin-left:4px}
 .pm label.on{border-color:var(--rose);background:#fff0f5}
+.pm{flex-direction:column;gap:8px}
+.pm label{display:flex;align-items:center;gap:12px;text-align:right;font-size:15px;font-weight:700;padding:12px 14px;flex:none}
+.pm label .lg{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;flex:none}
+.pm label .pt{flex:1}
+.pm label small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.pm input{margin:0}
 .vfbox{background:#fff0f5;border-radius:10px;padding:12px;margin-top:8px;font-size:14px;display:none}
 .sum{background:#fff7f9;border:1px dashed var(--rose);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:14px}
 .sum div{display:flex;justify-content:space-between;padding:2px 0}
@@ -504,10 +510,13 @@ table.sg th{background:#fff0f5}
   <div id="cmsg" style="font-size:13px;margin-top:4px"></div>
   <label>طريقة الدفع</label>
   <div class="pm">
-   <label class="on" id="pm1"><input type="radio" name="pm" value="cod" checked onchange="pmChg()">💵 عند الاستلام</label>
-   <label id="pm2"><input type="radio" name="pm" value="vf" onchange="pmChg()">📱 فودافون كاش</label>
+   <label class="on" id="pm1"><span class="lg" style="background:#f3e6ec">💵</span><span class="pt">الدفع عند الاستلام<small>ادفعي كاش للمندوب</small></span><input type="radio" name="pm" value="cod" checked onchange="pmChg()"></label>
+   <label id="pm2"><span class="lg" style="background:#e60000">📱</span><span class="pt">فودافون كاش<small>تحويل يدوي مع صورة الإيصال</small></span><input type="radio" name="pm" value="vf" onchange="pmChg()"></label>
+   <label id="pmV" style="display:none"><span class="lg" style="background:#e60000">V</span><span class="pt">فودافون كاش<small>سحب مباشر من محفظتك</small></span><input type="radio" name="pm" value="vodafone" onchange="pmChg()"></label>
+   <label id="pmO" style="display:none"><span class="lg" style="background:#ff7900">O</span><span class="pt">أورنج كاش<small>سحب مباشر من محفظتك</small></span><input type="radio" name="pm" value="orange" onchange="pmChg()"></label>
+   <label id="pmE" style="display:none"><span class="lg" style="background:#6fa820">e&amp;</span><span class="pt">إتصالات كاش<small>سحب مباشر من محفظتك</small></span><input type="radio" name="pm" value="etisalat" onchange="pmChg()"></label>
   </div>
-  <div class="vfbox" id="vfbox"><div id="vfAuto" style="display:none">المبلغ الإجمالي هيتسحب مباشرة من محفظة فودافون كاش بتاعتك بعد تأكيد الطلب.<label>رقم محفظتك فودافون كاش (010...)</label><input id="vw" type="tel" inputmode="tel" dir="ltr" placeholder="01012345678"><div style="font-size:13px;color:var(--muted);margin-top:6px">بعد التأكيد هتوافقي على السحب من موبايلك بالكود #9*1*</div></div><div id="vfManual">
+  <div class="vfbox" id="vfbox"><div id="vfAuto" style="display:none">هنسحب المبلغ الإجمالي مباشرة من محفظتك <b id="vwNet"></b> على الرقم: <b dir="ltr" id="vwShow"></b><div style="font-size:13px;color:var(--muted);margin-top:6px">لو الرقم غلط عدّليه في خانة رقم الموبايل فوق. بعد تأكيد الطلب هتوافقي على السحب من موبايلك.</div></div><div id="vfManual">
    حوّلي المبلغ الإجمالي على رقم فودافون كاش: <b id="vfNum"></b>
    <label>الرقم اللي حوّلتي منه</label><input id="vs" type="tel" inputmode="tel">
    <label>رقم العملية</label><input id="vt" inputmode="numeric">
@@ -660,6 +669,7 @@ XXL|105-110|85-90|111-116`;
 const STATUSES=['جديد','قيد التجهيز','تم الشحن','خرج للتوصيل','تم التسليم','ملغي'];
 const PAY_WORKER='https://jasmine-pay.amrmido781.workers.dev';
 const vfAutoOn=()=>!!settings.vfAuto||new URLSearchParams(location.search).get('vftest')==='1';
+const VF_METHODS={vodafone:'vf_cash',orange:'orange_cash',etisalat:'etisalat_cash'}; /* قيم orange/etisalat لازم تتأكد من شحناوي */
 const normW=s=>{let d=String(s||'').replace(/\D/g,'');if(d.startsWith('20'))d=d.slice(2);if(d&&!d.startsWith('0'))d='0'+d;return d};
 const STEPS=[['جديد','تم استلام الطلب'],['قيد التجهيز','جاري التجهيز'],['تم الشحن','تم الشحن'],['خرج للتوصيل','خرج للتوصيل'],['تم التسليم','تم التسليم']];
 
@@ -1132,9 +1142,12 @@ function checkout(){
 }
 function pmChg(){
  const v=document.querySelector('input[name=pm]:checked').value;
- $('vfbox').style.display=v==='vf'?'block':'none';
- $('vfAuto').style.display=vfAutoOn()?'block':'none';$('vfManual').style.display=vfAutoOn()?'none':'block';
- $('pm1').classList.toggle('on',v==='cod');$('pm2').classList.toggle('on',v==='vf');
+ const A=vfAutoOn(),isW=['vodafone','orange','etisalat'].includes(v);
+ $('vfbox').style.display=(v==='vf'||isW)?'block':'none';
+ $('vfAuto').style.display=isW?'block':'none';$('vfManual').style.display=v==='vf'?'block':'none';
+ $('pm2').style.display=A?'none':'';['pmV','pmO','pmE'].forEach(i=>$(i).style.display=A?'':'none');
+ vfShow();
+ [['pm1','cod'],['pm2','vf'],['pmV','vodafone'],['pmO','orange'],['pmE','etisalat']].forEach(x=>$(x[0]).classList.toggle('on',v===x[1]));
 }
 function compress(f,max,q,cb,onErr){
  const bad=()=>{if(onErr)onErr();else toast('تعذر قراءة الصورة، جربي صورة تانية (JPG أو PNG)')};
@@ -1163,7 +1176,7 @@ function waLink(o){
  L.push('');
  if(o.disc)L.push('خصم ('+o.coupon+'): -'+o.disc+' ج.م');
  L.push('الشحن: '+(o.ship||0)+' ج.م','الإجمالي: '+o.total+' ج.م');
- if(o.pay==='vf'&&o.vf&&o.vf.auto)L.push('الدفع: فودافون كاش (تلقائي)','المحفظة: '+o.vf.wallet);
+ if(o.pay==='vf'&&o.vf&&o.vf.auto)L.push('الدفع: '+({vodafone:'فودافون كاش',orange:'أورنج كاش',etisalat:'إتصالات كاش'}[o.vf.net]||'محفظة')+' (تلقائي)','المحفظة: '+o.vf.wallet);
  else if(o.pay==='vf'&&o.vf)L.push('الدفع: فودافون كاش','محوّل من: '+o.vf.sender,'رقم العملية: '+o.vf.tx,o.vf.url?'صورة التحويل: '+o.vf.url:'(هبعت صورة التحويل في رسالة بعد دي)');
  else L.push('الدفع: عند الاستلام');
  return 'https://wa.me/'+waNum()+'?text='+encodeURIComponent(L.join('\n'));
@@ -1207,11 +1220,11 @@ async function placeOrder(){
  const dg=p.replace(/\D/g,'');
  if(!/^(20)?0?1[0125]\d{8}$/.test(dg)){fail('اكتبي رقم موبايل مصري صحيح (مثال: 01012345678)');return}
  if(!cartLines().length){fail('السلة فارغة');return}
- const pay=document.querySelector('input[name=pm]:checked').value;
+ const pm=document.querySelector('input[name=pm]:checked').value,pay=pm==='cod'?'cod':'vf';
  let vf=null;
  if(pay==='vf'){
-  const A=vfAutoOn(),w=A?normW($('vw').value):'',s=A?'':$('vs').value.trim(),t=A?'':$('vt').value.trim();
-  if(A){if(!/^010\d{8}$/.test(w)){fail('اكتبي رقم محفظة فودافون كاش صحيح (بيبدأ بـ 010)');return}vf={auto:true,wallet:w}}else{
+  const A=pm!=='vf',w=A?normW($('cp').value):'',s=A?'':$('vs').value.trim(),t=A?'':$('vt').value.trim();
+  if(A){const PF={vodafone:'010',etisalat:'011',orange:'012'},NM={vodafone:'فودافون',etisalat:'إتصالات',orange:'أورنج'};if(!new RegExp('^'+PF[pm]+'\\d{8}$').test(w)){fail('رقم الموبايل لازم يكون رقم '+NM[pm]+' (بيبدأ بـ '+PF[pm]+') عشان نسحب من محفظتك');return}vf={auto:true,wallet:w,net:pm,method:VF_METHODS[pm]}}else{
   if(!s||!t||!rcpt){fail('لدفع فودافون كاش اكتبي الرقم المحوّل منه ورقم العملية وارفعي صورة التحويل');return}
   vf={sender:s,tx:t,img:rcpt};}
  }
@@ -1242,13 +1255,13 @@ async function placeOrder(){
   orders.unshift(o);save('orders',orders);save('last',{no,phone:p});save('addr',{n,p,g,ar,a});save('watch',{no,phone:p,st:'جديد'});
   {const L=load('addrs',[]).filter(x=>!(x.g===g&&x.ar===ar&&x.a===a&&x.p===p));L.unshift({n,p,g,ar,a});save('addrs',L.slice(0,5))}cart=[];save('cart',cart);updCart();
   $('coOv').classList.remove('show');
-  ['cn','cp','ca','car','vs','vt','vw','cc'].forEach(i=>$(i).value='');$('cg').value='';rcpt='';curCoupon=null;locReset();
+  ['cn','cp','ca','car','vs','vt','cc'].forEach(i=>$(i).value='');$('cg').value='';rcpt='';curCoupon=null;locReset();
   $('okNo').textContent='#ORD-'+no;$('okWa').href=waLink(o);fillOk(o);
   lastRc=vf?vf.img:'';lastNo=no;
   {const A=!!(vf&&vf.auto);$('okVfBox').style.display=A?'block':'none';$('okVfBtn').style.display='none';$('okVfMsg').textContent='';window._vfDoc=oid(no,p);
-   if(A){if(saved)vfStart(window._vfDoc,vf.wallet,o.total);else vfMsg('الطلب ماتسجلش على السيرفر فالدفع التلقائي مش هيشتغل. ابعتي الطلب على واتساب.')}}
+   if(A){if(saved)vfStart(window._vfDoc,vf.wallet,o.total,vf.net,vf.method);else vfMsg('الطلب ماتسجلش على السيرفر فالدفع التلقائي مش هيشتغل. ابعتي الطلب على واتساب.')}}
   $('okShare').style.display=vf&&!vf.auto&&!vf.url&&navigator.share?'block':'none';$('okShareNote').style.display=vf&&!vf.auto&&!vf.url?'block':'none';
-  $('okPay').textContent=(pay==='vf'?(vf.auto?'الدفع: فودافون كاش — سحب مباشر من محفظتك':'الدفع: فودافون كاش — هنراجع التحويل ونأكد لك'):'الدفع: عند الاستلام')+(saved?'':' — الطلب اتحفظ على جهازك، لازم تبعتيه على واتساب عشان يوصلنا');
+  $('okPay').textContent=(pay==='vf'?(vf.auto?'الدفع: محفظة إلكترونية — سحب مباشر من محفظتك':'الدفع: فودافون كاش — هنراجع التحويل ونأكد لك'):'الدفع: عند الاستلام')+(saved?'':' — الطلب اتحفظ على جهازك، لازم تبعتيه على واتساب عشان يوصلنا');
   $('okOv').classList.add('show');
  }catch(e){
   console.error(e);fail('حصل خطأ أثناء إرسال الطلب، جربي تاني');
@@ -1263,14 +1276,21 @@ async function workerCall(path,orderDoc,extra){
  let j=null;try{j=await r.json()}catch(e){}
  return j;
 }
+function vfShow(){
+ const e=$('vwShow');if(!e)return;
+ e.textContent=normW($('cp').value)||'(اكتبي رقم الموبايل فوق)';
+ const n=document.querySelector('input[name=pm]:checked'),N={vodafone:'فودافون كاش',orange:'أورنج كاش',etisalat:'إتصالات كاش'};
+ $('vwNet').textContent=(n&&N[n.value])||'';
+}
+$('cp').addEventListener('input',vfShow);
 function vfMsg(t){const e=$('okVfMsg');if(e)e.textContent=t;toast(t)}
-async function vfStart(doc,wallet,total){
+async function vfStart(doc,wallet,total,net,method){
  const btn=$('okVfBtn');btn.style.display='none';
  $('okVfMsg').textContent='جاري تجهيز طلب الدفع...';
  let j=null;
- try{j=await workerCall('/create',doc,{number:wallet})}catch(e){vfMsg('تعذر الاتصال بخدمة الدفع. الطلب اتسجل، ابعتيه على واتساب ونكمل معاكي.');return}
+ try{j=await workerCall('/create',doc,{number:wallet,method})}catch(e){vfMsg('تعذر الاتصال بخدمة الدفع. الطلب اتسجل، ابعتيه على واتساب ونكمل معاكي.');return}
  if(!j||j.ok===false){vfMsg('تعذر تجهيز الدفع'+(j&&j.error?' ('+j.error+')':'')+'. الطلب اتسجل، ابعتيه على واتساب ونكمل معاكي.');return}
- $('okVfMsg').innerHTML='تم تجهيز طلب سحب <b>'+money(total)+' ج.م</b> من محفظتك <b dir="ltr">'+esc(wallet)+'</b>.<br>1) من موبايلك اتصلي بـ <b dir="ltr">#9*1*</b> ووافقي على السحب.<br>2) بعدها اضغطي الزر تحت.';
+ $('okVfMsg').innerHTML='تم تجهيز طلب سحب <b>'+money(total)+' ج.م</b> من محفظتك <b dir="ltr">'+esc(wallet)+'</b>.<br>'+(net==='vodafone'?'1) من موبايلك اتصلي بـ <b dir="ltr">#9*1*</b> ووافقي على السحب.':'1) وافقي على طلب السحب من محفظتك على موبايلك (هيوصلك إشعار أو رسالة).')+'<br>2) بعدها اضغطي الزر تحت.';
  btn.style.display='block';
 }
 async function vfConfirm(doc){
@@ -1548,7 +1568,7 @@ function dash(){
 }
 function payCell(o){
  if(o.pay!=='vf'||!o.vf)return 'عند الاستلام';
- if(o.vf.auto)return `فودافون كاش (تلقائي)<br><small>المحفظة: ${esc(o.vf.wallet)}${o.vfRef?'<br>مرجع: '+esc(o.vfRef):''}</small><br>`+(o.payOk?'<span class="pill ok">تم الدفع ✅</span>':`<span class="pill wait">${esc(o.vfStatus||'لم يبدأ')}</span>`);
+ if(o.vf.auto)return `${({vodafone:'فودافون كاش',orange:'أورنج كاش',etisalat:'إتصالات كاش'}[o.vf.net]||'محفظة')} (تلقائي)<br><small>المحفظة: ${esc(o.vf.wallet)}${o.vfRef?'<br>مرجع: '+esc(o.vfRef):''}</small><br>`+(o.payOk?'<span class="pill ok">تم الدفع ✅</span>':`<span class="pill wait">${esc(o.vfStatus||'لم يبدأ')}</span>`);
  return `فودافون كاش<br><small>من: ${esc(o.vf.sender)}<br>عملية: ${esc(o.vf.tx)}</small><br><button class="btn sm dark" onclick="viewImg(${o.id})">عرض الصورة</button><br>`+(o.payOk?`<span class="pill ok">تم التأكيد</span> <button class="btn sm" onclick="togglePay(${o.id})">إلغاء</button>`:`<span class="pill wait">بانتظار المراجعة</span> <button class="btn sm" onclick="togglePay(${o.id})">تأكيد</button>`);
 }
 function viewImg(id){const o=orders.find(x=>x.id===id);if(o&&o.vf){$('bigImg').src=o.vf.img;$('imgOv').classList.add('show')}}
