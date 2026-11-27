@@ -15,7 +15,7 @@
 <title>Jasmine Style</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'"><noscript><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet"></noscript>
 <style>
 :root{--bg:#fff7f9;--ink:#3a2530;--muted:#8a6f7b;--rose:#d6638a;--dark:#4a2335;--card:#fff;--line:#f3dde5;--red:#c0392b}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -249,6 +249,34 @@ table.sg th{background:#fff0f5}
 .flcd{display:inline-flex;gap:4px;direction:ltr;align-self:flex-start;font-weight:800;font-size:14px;font-variant-numeric:tabular-nums;color:var(--red);background:#fff0f0;border:1px dashed var(--red);border-radius:8px;padding:2px 8px}
 .flchip{display:inline-block;background:#fff0f0;color:var(--red);border:1px dashed var(--red);border-radius:8px;padding:1px 8px;font-size:12px;font-weight:700;direction:ltr;align-self:flex-start;font-variant-numeric:tabular-nums}
 .flft{padding:12px 14px;text-align:center}
+
+/* ===== Order confirmed ===== */
+.okbox{text-align:center;background:#f8fafb;max-width:400px;padding:26px 18px 20px}
+.okck{width:86px;height:86px;margin:4px auto 14px;border-radius:50%;background:#e3f7ee;border:3px solid #3ecf9a;display:flex;align-items:center;justify-content:center;animation:okpop .45s cubic-bezier(.2,1.4,.4,1)}
+.okck svg{width:46px;height:46px;stroke:#0f8a52}
+.okck svg path{stroke-dasharray:30;stroke-dashoffset:30;animation:okdraw .45s .3s ease forwards}
+@keyframes okpop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes okdraw{to{stroke-dashoffset:0}}
+.okh{font-size:24px;font-weight:800;color:#111;margin:0 0 4px}
+.oksub{color:var(--muted);font-size:14px;margin-bottom:16px}
+.okcard{background:#fff;border:1px solid #e3e8ec;border-radius:12px;padding:12px 14px;margin-bottom:10px;text-align:right}
+.okid{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:#555}
+.okid b{direction:ltr;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:16px;color:#1f4f7a;letter-spacing:1px}
+.okhead{width:100%;background:none;display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700;color:#333;padding:0}
+.okvd{color:#1f4f7a;font-size:12px;font-weight:700}
+#okList{margin-top:10px;border-top:1px solid #eef1f3;padding-top:6px}
+.okit{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:5px 0;color:#444}
+.okit small{color:var(--muted)}
+.okit b{white-space:nowrap}
+.okr{display:flex;justify-content:space-between;font-size:14px;color:#666;padding:4px 0}
+.okr.free b{color:#0f8a52}
+.okr.tt{border-top:1px solid #e3e8ec;margin-top:6px;padding-top:10px;font-size:16px;font-weight:800;color:#111}
+.okr.tt b{color:#0b6b3f;font-size:18px}
+.okpay{font-size:13px;color:var(--muted);margin:2px 0 12px}
+.okbtn{display:block;width:100%;border-radius:12px;padding:14px;font-size:15px;font-weight:700;margin-top:8px;text-align:center;background:#fff;color:#1f4f7a;border:1.5px solid #cfe0ec}
+.okbtn.main{background:#25a244;color:#fff;border-color:#25a244}
+.okbtn.track{background:#1f5f8b;color:#fff;border-color:#1f5f8b;box-shadow:0 4px 12px rgba(31,95,139,.3)}
+.okbtn.back{background:#e9eef3;color:#333;border-color:#e9eef3}
 </style>
 </head>
 <body>
@@ -494,17 +522,22 @@ table.sg th{background:#fff0f5}
 
 <!-- Success -->
 <div class="ov" id="okOv" style="z-index:260">
- <div class="box" style="text-align:center">
-  <div style="font-size:48px">🎉</div>
-  <h3>تم استلام طلبك</h3>
-  <p>رقم طلبك</p>
-  <div style="font-size:32px;font-weight:800;color:var(--rose)" id="okNo"></div>
-  <p id="okPay" style="margin:8px 0;color:var(--muted);font-size:14px"></p>
-  <p style="font-size:14px"><b>اضغطي الزر الأخضر لإرسال الطلب على واتساب عشان نأكده معاكي.</b><br>واحتفظي برقم الطلب، وتقدري تتابعيه من "تتبع طلبك" برقم موبايلك.</p>
-  <a class="btn green" id="okWa" target="_blank" rel="noopener" style="display:block;margin-top:12px">📲 أرسلي الطلب على واتساب</a>
-  <button class="btn line" id="okShare" style="display:none;width:100%;margin-top:10px" onclick="shareRcpt()">🖼️ أرسلي صورة التحويل على واتساب</button>
-  <p id="okShareNote" style="display:none;font-size:13px;color:var(--muted);margin-top:6px">بعد ما تبعتي رسالة الطلب، ابعتي صورة التحويل في نفس المحادثة (واتساب مبيسمحش بإرسال الصور تلقائي).</p>
-  <button class="btn dark" style="margin-top:10px" onclick="$('okOv').classList.remove('show')">تمام</button>
+ <div class="box okbox">
+  <div class="okck"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12.5l4 4 8-9"/></svg></div>
+  <h3 class="okh">تم تأكيد الطلب</h3>
+  <p class="oksub">شكراً لشرائك من Jasmine Style!</p>
+  <div class="okcard okid"><span>رقم الطلب:</span><b id="okNo"></b></div>
+  <div class="okcard okitems" id="okItemsCard">
+   <button type="button" class="okhead" onclick="toggleOkItems()"><span>🛍️ ملخص الطلب (<span id="okCnt">0</span> قطع)</span><span class="okvd" id="okVd">عرض التفاصيل ⌄</span></button>
+   <div id="okList" style="display:none"></div>
+  </div>
+  <div class="okcard oktot" id="okTot"></div>
+  <p id="okPay" class="okpay"></p>
+  <a class="okbtn main" id="okWa" target="_blank" rel="noopener">📲 أرسلي الطلب على واتساب عشان نأكده</a>
+  <button class="okbtn" id="okShare" style="display:none" onclick="shareRcpt()">🖼️ أرسلي صورة التحويل على واتساب</button>
+  <p id="okShareNote" style="display:none;font-size:13px;color:var(--muted);margin:6px 0">بعد ما تبعتي رسالة الطلب، ابعتي صورة التحويل في نفس المحادثة (واتساب مبيسمحش بإرسال الصور تلقائي).</p>
+  <button class="okbtn track" onclick="okTrack()">🚚 تتبع الطلب</button>
+  <button class="okbtn back" onclick="okHome()">الرجوع للرئيسية</button>
  </div>
 </div>
 
@@ -1146,6 +1179,18 @@ async function shareRcpt(){
  }catch(e){if(e&&e.name!=='AbortError')toast('تعذر المشاركة، ابعتي الصورة من المعرض يدوياً')}
 }
 const withTimeout=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
+function toggleOkItems(){const l=$('okList'),o=l.style.display==='none';l.style.display=o?'block':'none';$('okVd').textContent=o?'إخفاء التفاصيل ⌃':'عرض التفاصيل ⌄'}
+function okHome(){$('okOv').classList.remove('show');window.scrollTo({top:0,behavior:'smooth'})}
+function okTrack(){$('okOv').classList.remove('show');openTrack()}
+function fillOk(o){
+ $('okCnt').textContent=(o.items||[]).reduce((a,i)=>a+i.q,0);
+ $('okList').style.display='none';$('okVd').textContent='عرض التفاصيل ⌄';
+ $('okList').innerHTML=(o.items||[]).map(i=>`<div class="okit"><span>${esc(i.name)}${i.color||i.size?' <small>('+[i.color,i.size].filter(Boolean).map(esc).join('، ')+')</small>':''} × ${i.q}</span><b>${money(i.price*i.q)} ج.م</b></div>`).join('');
+ $('okTot').innerHTML=`<div class="okr"><span>المنتجات</span><b>${money(o.sub!=null?o.sub:o.total)} ج.م</b></div>`
+  +`<div class="okr ${o.ship?'':'free'}"><span>الشحن</span><b>${o.ship?money(o.ship)+' ج.م':'مجاني'}</b></div>`
+  +(o.disc?`<div class="okr"><span>الخصم${o.coupon?' ('+esc(o.coupon)+')':''}</span><b>-${money(o.disc)} ج.م</b></div>`:'')
+  +`<div class="okr tt"><span>الإجمالي المدفوع</span><b>${money(o.total)} ج.م</b></div>`;
+}
 async function placeOrder(){
  const E=$('cerr'),btn=$('coBtn');
  const fail=m=>{E.textContent=m;toast(m);try{E.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}};
@@ -1191,7 +1236,7 @@ async function placeOrder(){
   {const L=load('addrs',[]).filter(x=>!(x.g===g&&x.ar===ar&&x.a===a&&x.p===p));L.unshift({n,p,g,ar,a});save('addrs',L.slice(0,5))}cart=[];save('cart',cart);updCart();
   $('coOv').classList.remove('show');
   ['cn','cp','ca','car','vs','vt','cc'].forEach(i=>$(i).value='');$('cg').value='';rcpt='';curCoupon=null;locReset();
-  $('okNo').textContent=no;$('okWa').href=waLink(o);
+  $('okNo').textContent='#ORD-'+no;$('okWa').href=waLink(o);fillOk(o);
   lastRc=vf?vf.img:'';lastNo=no;
   $('okShare').style.display=vf&&!vf.url&&navigator.share?'block':'none';$('okShareNote').style.display=vf&&!vf.url?'block':'none';
   $('okPay').textContent=(pay==='vf'?'الدفع: فودافون كاش — هنراجع التحويل ونأكد لك':'الدفع: عند الاستلام')+(saved?'':' — الطلب اتحفظ على جهازك، لازم تبعتيه على واتساب عشان يوصلنا');
@@ -1273,7 +1318,7 @@ setInterval(()=>checkAnn(true),120000);
 async function openLogin(){
  const m=sessionStorage.getItem('jsw_admin');
  if(m==='cloud'){
-  try{const x=await fbInit();await x.auth.authStateReady();if(x.auth.currentUser){adminMode='cloud';showAdmin();return}}catch(e){}
+  try{const x=await fbAuthInit();await x.auth.authStateReady();if(x.auth.currentUser){adminMode='cloud';showAdmin();return}}catch(e){}
  }
  if(m==='local'&&!settings.noLocal){adminMode='local';showAdmin();return}
  $('lu').value=$('lp').value='';$('lerr').textContent='';$('loginOv').classList.add('show');setTimeout(()=>$('lu').focus(),50);
@@ -1286,7 +1331,7 @@ async function doLogin(){
    const email=u.includes('@')?u:(load('admemail','')||'');
    if(email){
     try{
-     const x=await fbInit();await x.U.signInWithEmailAndPassword(x.auth,email,p);
+     const x=await fbAuthInit();await x.U.signInWithEmailAndPassword(x.auth,email,p);
      save('admemail',email);adminMode='cloud';sessionStorage.setItem('jsw_admin','cloud');
      $('loginOv').classList.remove('show');await showAdmin();return;
     }catch(e){}
@@ -1307,7 +1352,7 @@ async function showAdmin(){
 function closeAdmin(){$('admin').style.display='none';$('site').style.display='block';renderAll();applySettings()}
 async function logout(){
  try{sessionStorage.removeItem('jsw_admin')}catch(e){}
- if(adminMode==='cloud'){try{const x=await fbInit();await x.U.signOut(x.auth)}catch(e){}}
+ if(adminMode==='cloud'){try{const x=await fbAuthInit();await x.U.signOut(x.auth)}catch(e){}}
  adminMode='';closeAdmin();
 }
 const cloudAdmin=()=>adminMode==='cloud';
@@ -1322,13 +1367,29 @@ function cfNo(){$('cfOv').classList.remove('show');_cf=null}
 let _fb=null;
 const fbCfg=()=>settings.fbcfg&&settings.fbcfg.projectId&&settings.fbcfg.apiKey?settings.fbcfg:FB_DEFAULT;
 const fbReady=()=>!!(fbCfg()&&fbCfg().projectId);
-async function fbInit(){
- if(_fb)return _fb;
- const b='https://www.gstatic.com/firebasejs/10.12.2/';
- const [A,F,U]=await Promise.all([import(b+'firebase-app.js'),import(b+'firebase-firestore.js'),import(b+'firebase-auth.js')]);
- const app=A.initializeApp(fbCfg());
- _fb={F,U,db:F.getFirestore(app),auth:U.getAuth(app)};
- return _fb;
+let _fbP=null,_authP=null;
+function fbInit(){
+ if(_fbP)return _fbP;
+ _fbP=(async()=>{
+  const b='https://www.gstatic.com/firebasejs/10.12.2/';
+  const [A,F]=await Promise.all([import(b+'firebase-app.js'),import(b+'firebase-firestore.js')]);
+  const app=A.initializeApp(fbCfg());
+  _fb={F,app,db:F.getFirestore(app)};
+  return _fb;
+ })();
+ _fbP.catch(()=>{_fbP=null});
+ return _fbP;
+}
+/* مكتبة تسجيل الدخول (للإدارة بس) بتتحمل بعد ما الموقع يظهر */
+function fbAuthInit(){
+ if(_authP)return _authP;
+ _authP=(async()=>{
+  const x=await fbInit();
+  if(!x.auth){const U=await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');x.U=U;x.auth=U.getAuth(x.app)}
+  return x;
+ })();
+ _authP.catch(()=>{_authP=null});
+ return _authP;
 }
 const oid=(no,ph)=>no+'_'+String(ph).replace(/\D/g,'');
 async function cloudSet(col,id,data){const x=await fbInit();await x.F.setDoc(x.F.doc(x.db,col,String(id)),data)}
@@ -1342,18 +1403,38 @@ async function wr(col,id,data){if(!cloudAdmin())return;try{await cloudSet(col,id
 async function rm(col,id){if(!cloudAdmin())return;try{await cloudDel(col,id)}catch(e){toast('تعذر الحذف من السيرفر')}}
 const cloudSettings=()=>{const s={...settings};delete s.fbcfg;return s};
 function persistSettings(){save('settings',settings);applySettings();wr('settings','main',cloudSettings());logAct('set','تعديل الإعدادات أو العروض')}
-async function cloudLoad(){
+async function cloudLoad(onFirst){
  try{
   const x=await fbInit(),F=x.F;
-  const get=async c=>(await F.getDocs(F.collection(x.db,c))).docs.map(d=>d.data());
-  const [P,C,S]=await Promise.all([get('products'),get('cats'),F.getDoc(F.doc(x.db,'settings','main'))]);
-  prods=P.map(normProd);
-  cats=C.sort((a,b)=>(a.order||0)-(b.order||0));
-  if(S.exists())settings={...settings,...S.data()};
-  cloudOK=true;
-  idbSet('cache',{prods,cats,settings:cloudSettings()});
+  const col=c=>F.collection(x.db,c);
+  const get=async c=>(await F.getDocs(col(c))).docs.map(d=>d.data());
+  const sGet=F.getDoc(F.doc(x.db,'settings','main'));
+  const apply=(C,S)=>{
+   cats=C.sort((a,b)=>(a.order||0)-(b.order||0));
+   if(S.exists())settings={...settings,...S.data()};
+  };
+  let P;
+  if(onFirst){
+   /* أول زيارة: نعرض أحدث ١٢ منتج بسرعة وبعدين نكمل الباقي في الخلفية */
+   const [P1,C,S]=await Promise.all([
+    F.getDocs(F.query(col('products'),F.orderBy(F.documentId(),'desc'),F.limit(12))).then(r=>r.docs.map(d=>d.data())),
+    get('cats'),sGet]);
+   prods=P1.map(normProd);apply(C,S);cloudOK=true;
+   try{onFirst()}catch(e){console.warn(e)}
+   P=await get('products');
+  }else{
+   const [P0,C,S]=await Promise.all([get('products'),get('cats'),sGet]);
+   P=P0;apply(C,S);
+  }
+  const np=P.map(normProd);
+  const snap=JSON.stringify(np);
+  const changed=snap!==window._snap;
+  window._snap=snap;
+  prods=np;cloudOK=true;
+  idbSet('cache',{prods:JSON.parse(snap),cats:JSON.parse(JSON.stringify(cats)),settings:cloudSettings()});
   get('reviews').then(R=>{reviews=R}).catch(()=>{});
- }catch(e){cloudOK=false;console.warn('cloud',e)}
+  return changed||!!onFirst;
+ }catch(e){cloudOK=false;console.warn('cloud',e);return false}
 }
 /* كاش سريع على الجهاز */
 function idb(){return new Promise((res,rej)=>{const r=indexedDB.open('jsw',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
@@ -1896,28 +1977,34 @@ function showNetErr(){
  if(e)e.innerHTML='<div class="empty" style="grid-column:1/-1">النت ضعيف 📶<br>مش قادرين نحمّل المنتجات دلوقتي<br><button class="btn" style="margin-top:12px" onclick="location.reload()">حاولي تاني</button></div>';
 }
 async function boot(){
- if(fbReady())fbInit().catch(()=>{});
+ const paint=()=>{prods=prods.map(normProd);flashApply();applySettings();renderAll()};
+ let _ex=false;const extras=()=>{if(_ex)return;_ex=true;checkAnn(false);flashAutoShow();trackVisit()};
+ let _hs=false;const openHash=()=>{if(_hs)return;const hm=location.hash.match(/^#p(\d+)$/);if(hm&&prodOf(+hm[1])){_hs=true;openPd(+hm[1])}};
  if(fbReady()){
-  /* المنتجات بتيجي من السيرفر بس — مفيش عرض لمنتجات قديمة */
+  fbInit().catch(()=>{});
   const cache=await Promise.race([idbGet('cache'),new Promise(r=>setTimeout(()=>r(null),1500))]);
   if(cache&&cache.settings)settings={...settings,...cache.settings};
-  prods=[];
-  applySettings();showSkel();
-  const fresh=cloudLoad();window._fresh=fresh;
-  await Promise.race([fresh,new Promise(r=>setTimeout(r,15000))]);
-  if(cloudOK){
-   prods=prods.map(normProd);flashApply();applySettings();renderAll();checkAnn(false);flashAutoShow();trackVisit();
+  const hasCache=!!(cache&&Array.isArray(cache.prods)&&cache.prods.length&&Array.isArray(cache.cats));
+  let painted=false;
+  if(hasCache){
+   /* زيارة تانية: نعرض اللي على الجهاز فوراً وبعدين نحدّث بصمت */
+   prods=cache.prods;cats=cache.cats;window._snap=JSON.stringify(prods.map(normProd));
+   paint();painted=true;extras();openHash();
   }else{
-   showNetErr();
+   prods=[];applySettings();showSkel();
   }
+  const first=(!hasCache&&!cart.length)?()=>{paint();painted=true;extras();openHash()}:null;
+  const fresh=cloudLoad(first);window._fresh=fresh;
+  const changed=await Promise.race([fresh,new Promise(r=>setTimeout(()=>r('timeout'),15000))]);
+  if(changed==='timeout'){if(!painted)showNetErr()}
+  else if(cloudOK){if(changed||!painted){paint();extras();openHash()}}
+  else if(!painted)showNetErr();
+  setTimeout(()=>{fbAuthInit().catch(()=>{})},4000);
  }else{
-  const paint=()=>{prods=prods.map(normProd);flashApply();applySettings();renderAll()};
   window._fresh=Promise.resolve();
-  paint();checkAnn(false);flashAutoShow();trackVisit();
+  paint();extras();openHash();
  }
- const hm=location.hash.match(/^#p(\d+)$/);if(hm&&prodOf(+hm[1]))openPd(+hm[1]);
 }
-
 /* ============ تنزيل التطبيق + هدية الكود ============ */
 const isApp=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 const isIos=()=>/iphone|ipad|ipod/i.test(navigator.userAgent);
